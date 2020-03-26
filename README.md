@@ -33,7 +33,7 @@ Connect to labjack and measure the temperature.
 
 ### Instruction to run
 
-   Login to lab-PC  
+   Login to lab-PC    
                       ssh edges-0@10.206.162.150  
                       password :- d1p0l3ASU1420  
                       cd  /home/edges-0/Desktop/Titu/Automation  
