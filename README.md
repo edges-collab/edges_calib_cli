@@ -19,17 +19,17 @@ Automate the calibration procedure and save all files with standard naming conve
 
 ## There are four scripts 
 ### main_calib.py 
-Calls the measurement script (ambient.py)
-Save all generated files to destination directory
+Calls the measurement script (ambient.py)  
+Save all generated files to destination directory  
 ### ambient.py
-Display all messages and comments
-Calls the fastspec script
-Calls the S11 measurement script
-Calls the temperature measurement script 
+Display all messages and comments  
+Calls the fastspec script  
+Calls the S11 measurement script  
+Calls the temperature measurement script   
 ### S11_VNA.py
-Connect to network analyser and measure S11
-Temp_sensor_with_time_U6.py
-Connect to labjack and measure the temperature.
+Connect to network analyser and measure S11  
+### Temp_sensor_with_time_U6.py
+Connect to labjack and measure the temperature.  
 
 ### Instruction to run
 
