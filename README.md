@@ -3,7 +3,7 @@
 # Cli- Automation for edges receiver calibration 
 
 ## Objectives
-Automate the calibration procedure and save all files standard naming convention and directory structure.
+Automate the calibration procedure and save all files with standard naming convention and directory structure.
  
 
 ### Directories 
