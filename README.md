@@ -1,38 +1,37 @@
-# edges_calib_cli
-#   automated calibration of edges receiver
-# Heading Cli- Automation testing and review 
 
-## Heading Objectives
-Review the naming convention and directory structure.
-Review the missing steps in calibration if any.
-Review the functionality. 
 
-## Heading Directories 
+# Cli- Automation for edges receiver calibration 
 
-## HeadingDestination directory
+## Objectives
+Automate the calibration procedure and save all files standard naming convention and directory structure.
+ 
+
+### Directories 
+
+### Destination directory
     Directory in which the calibrations files are saved      
         /home/edges-0/Desktop/Titu/Automation/Calib
 
   
-## Heading Code directory
+### Code directory
      Directory in which the scripts are saved
      /home/edges-0/Desktop/Titu/Automation
 
-## Heading There are four scripts 
-##Heading Main_calib.py 
+## There are four scripts 
+### main_calib.py 
 Calls the measurement script (ambient.py)
 Save all generated files to destination directory
-##Heading ambient.py
+### ambient.py
 Display all messages and comments
 Calls the fastspec script
 Calls the S11 measurement script
 Calls the temperature measurement script 
-##Heading S11_VNA.py
+### S11_VNA.py
 Connect to network analyser and measure S11
 Temp_sensor_with_time_U6.py
 Connect to labjack and measure the temperature.
 
-##Heading Instruction to run
+### Instruction to run
 
    Login to lab-PC
                       ssh edges-0@10.206.162.150
