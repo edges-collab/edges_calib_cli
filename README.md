@@ -37,7 +37,7 @@ Connect to labjack and measure the temperature.
                       ssh edges-0@10.206.162.150  
                       password :- d1p0l3ASU1420  
                       cd  /home/edges-0/Desktop/Titu/Automation  
-                      sudo python main_calb.py 50 25C \n
+                      sudo python main_calb.py 50 25C  
                        where :-  
                                   50 is the time in seconds to execute the calibration(can be varied)  
                                   25C is the temperature of receiver  
