@@ -295,3 +295,10 @@ def test_power_supply_box():
         d.getFeedback(u3.BitStateWrite(6, 1))
         time.sleep(0.1)
         d.getFeedback(u3.BitStateWrite(7, 1))
+
+
+@main.command()
+@click.option("-r", "--repeat-num", type=int, default=1)
+def s11(repeat_num):
+    """Directly run all S11's for a particular load. Useful for quick testing."""
+    automation.take_all_s11(repeat_num)
