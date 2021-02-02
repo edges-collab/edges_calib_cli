@@ -173,7 +173,8 @@ def measure_switching_state_s11():
 
 def _binblock_raw(data_in):
     # Find the start position of the IEEE header, which starts with a '#'.
-    startpos = data_in.find(b"#")
+    data_in = data_in.decode()
+    startpos = data_in.find("#")
     logger.debug(f"Startpos: {startpos}")
 
     # Check for problem with start position.
@@ -182,12 +183,7 @@ def _binblock_raw(data_in):
 
     # Find the number that follows '#' symbol.  This is the number of digits in the block
     # length.
-    size_of_length = int(data_in[startpos + 1].decode())
-    logger.debug("Data in[startpos:startpos+1]: ", data_in[startpos : startpos + 1])
-    logger.debug(
-        "Data in[startpos:startpos+1].decode(): ",
-        data_in[startpos : startpos + 1].decode(),
-    )
+    size_of_length = int(data_in[startpos + 1])
     logger.debug(f"size_of_length: {size_of_length}")
     logger.debug(f"data_in: {data_in}")
 
@@ -431,13 +427,13 @@ def vna_calib():
 def _print_vna_settings(rf_power, n_averaging):
     console.print()
     console.rule("Settings for VNA calibration")
-    console.print("IF                 =100Hz")
-    console.print("Start freq         =40MHz")
-    console.print("Stop freq          =200MHz")
+    console.print("IF                 =100 Hz")
+    console.print("Start freq         =40 MHz")
+    console.print("Stop freq          =200 MHz")
     console.print("No. of freq points =641")
-    console.print(f"RF power output    ={rf_power}dBm")
+    console.print(f"RF power output    ={rf_power} dBm")
     console.print(f"No. of averaging   ={n_averaging}")
-    console.print("Calibration kit    =85033E Agilent")
+    console.print("Calibration kit    ='85033E Agilent'")
     console.rule()
     console.print()
 
