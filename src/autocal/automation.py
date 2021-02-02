@@ -418,7 +418,7 @@ def vna_calib():
 
     if qs.confirm("Confirm that all these steps were taken?").ask():
         console.print(
-            "[green] :checkmark: VNA Calibration is completed for all loads except ReceiverReading"
+            "[green] :heavy_check_mark: VNA Calibration is completed for all loads except ReceiverReading"
         )
     s.close()
 

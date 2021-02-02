@@ -61,7 +61,7 @@ def init():
         )
 
     console.print(
-        ":checkmark: [green] Success! Configuration written to ~/.edges-autocal"
+        ":heavy_check_mark: [green] Success! Configuration written to ~/.edges-autocal"
     )
 
 
