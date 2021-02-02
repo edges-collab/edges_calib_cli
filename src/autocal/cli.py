@@ -154,7 +154,7 @@ def run():
             "ReceiverReading",
         ],
         default="Ambient",
-    )
+    ).ask()
 
     # ------------------------------------------------------
     if calobs:
