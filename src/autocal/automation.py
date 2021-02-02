@@ -270,7 +270,7 @@ def measure_s11(fname=None):
     data_p = re.split("\r\n|,", binary_data_p)
     length = len(data_p[5:])
     data_p_array = np.array(data_p[5:])
-    data_p_re = data_p_array.reshape(length / 3, 3)
+    data_p_re = data_p_array.reshape(length // 3, 3)
 
     # Read Magnitude value and transfer to host controller
     # -----------------------------------------------------------
@@ -284,7 +284,7 @@ def measure_s11(fname=None):
     data_m = re.split("\r\n|,", binary_data_m)
     length = len(data_m[5:])
     data_m_array = np.array(data_m[5:])
-    data_m_re = data_m_array.reshape(length / 3, 3)
+    data_m_re = data_m_array.reshape(length // 3, 3)
 
     # Reshape Magnitude, phase and save as S11.csv in host controller
     # -----------------------------------------------------------
@@ -350,7 +350,7 @@ def receiver_s11(fname):
     data_p = re.split("\r\n|,", binary_data_p)
     length = len(data_p[5:])
     data_p_array = np.array(data_p[5:])
-    data_p_re = data_p_array.reshape(length / 3, 3)
+    data_p_re = data_p_array.reshape(length // 3, 3)
 
     # ___________________________________________________________
     # Read Magnitude value and transfer to host controller
@@ -365,7 +365,7 @@ def receiver_s11(fname):
     data_m = re.split("\r\n|,", binary_data_m)
     length = len(data_m[5:])
     data_m_array = np.array(data_m[5:])
-    data_m_re = data_m_array.reshape(length / 3, 3)
+    data_m_re = data_m_array.reshape(length // 3, 3)
 
     # ___________________________________________________________
     # Reshape Magnitude, phase and save as S11.csv in host controller
