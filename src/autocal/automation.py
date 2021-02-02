@@ -182,7 +182,7 @@ def _binblock_raw(data_in):
 
     # Find the number that follows '#' symbol.  This is the number of digits in the block
     # length.
-    size_of_length = int(data_in[startpos + 1])
+    size_of_length = int(str(data_in[startpos + 1]))
     logger.debug(f"size_of_length: {size_of_length}")
     logger.debug(f"data_in: {data_in}")
 
@@ -427,12 +427,12 @@ def _print_vna_settings(rf_power, n_averaging):
     console.print()
     console.rule("Settings for VNA calibration")
     console.print("IF                 =100Hz")
-    console.print("Strat freq         =40MHz")
-    console.print("Strop freq         =200MHz")
+    console.print("Start freq         =40MHz")
+    console.print("Stop freq          =200MHz")
     console.print("No. of freq points =641")
     console.print(f"RF power output    ={rf_power}dBm")
     console.print(f"No. of averaging   ={n_averaging}")
-    console.print("Calibration kit    =85033E Agilent ")
+    console.print("Calibration kit    =85033E Agilent")
     console.rule()
     console.print()
 
