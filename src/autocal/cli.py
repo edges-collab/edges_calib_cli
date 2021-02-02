@@ -43,12 +43,12 @@ def init():
         qs.path(
             "Directory in which calibration data should be saved:",
             only_directories=True,
-        )
+        ).ask()
     )
     spect_dir = Path(
-        qs.path("Directory in which spectra are kept:", only_directories=True)
+        qs.path("Directory in which spectra are kept:", only_directories=True).ask()
     )
-    pxspec = Path(qs.path("Path to fastspec repo:", only_directories=True))
+    pxspec = Path(qs.path("Path to fastspec repo:", only_directories=True).ask())
 
     with open(Path("~/.edges-autocal").expanduser(), "w") as fl:
         yaml.dump(
