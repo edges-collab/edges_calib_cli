@@ -114,7 +114,7 @@ def run_load(load, run_time):
     epipe = subprocess.Popen(["autocal", "temp_sensor"])
     time.sleep(run_time + 60)
 
-    console.print("[bold]Finished taking spectra.")
+    console.rule("[bold]Finished taking spectra.")
 
     console.print("")
     console.print("[bold]Taking First Set of S11 measurements...")
@@ -200,15 +200,15 @@ def _setup(s):
     )
 
     s.connect(server_address)
-    s.send("*IDN?\n")
+    s.send(b"*IDN?\n")
     time.sleep(0.05)
     data = s.recv(200)
     logger.info(f"Connected to ENA: {data}")
 
     # Define data format for Data transfer reference SCPI
-    s.send("FORM:DATA ASCii;*OPC?\n")
-    s.send("SENS:FREQ:START 40e6;*OPC?\n")
-    s.send("SENS:FREQ:STOP 200e6;*OPC?\n")
+    s.send(b"FORM:DATA ASCii;*OPC?\n")
+    s.send(b"SENS:FREQ:START 40e6;*OPC?\n")
+    s.send(b"SENS:FREQ:STOP 200e6;*OPC?\n")
 
 
 def measure_s11(fname=None):
@@ -220,30 +220,30 @@ def measure_s11(fname=None):
     # -----------------------------------------------------
     #       set the output power level there are different level of attenuation
     #       check document Agilent E5070B/E5071B ENA programmers guide page no 705
-    s.send("SOUR:POW:ATT 0;*OPC?\n")
-    s.send("SOUR:POW 0;*OPC?\n")
+    s.send(b"SOUR:POW:ATT 0;*OPC?\n")
+    s.send(b"SOUR:POW 0;*OPC?\n")
     time.sleep(0.5)
     # -----------------------------------------------------
 
-    s.send("SENS:SWE:POIN 641;*OPC?\n")
-    s.send("SENS:BWID 100;*OPC?\n")
-    s.send("SENS:AVER:STAT 1;*OPC?\n")
-    s.send("SENS:AVER:CLE;*OPC?\n")
+    s.send(b"SENS:SWE:POIN 641;*OPC?\n")
+    s.send(b"SENS:BWID 100;*OPC?\n")
+    s.send(b"SENS:AVER:STAT 1;*OPC?\n")
+    s.send(b"SENS:AVER:CLE;*OPC?\n")
 
-    s.send("SENS:AVER:COUN 10;*OPC?\n")
-    s.send("INIT:CONT ON;*OPC?\n")
+    s.send(b"SENS:AVER:COUN 10;*OPC?\n")
+    s.send(b"INIT:CONT ON;*OPC?\n")
     time.sleep(10)
-    s.send("DISP:WIND1:TRAC1:Y:AUTO;*OPC?\n")
+    s.send(b"DISP:WIND1:TRAC1:Y:AUTO;*OPC?\n")
 
     _print_vna_settings(0, 10)
 
     console.print()
     console.rule("Starting Measurements")
     # FIXME: why is the above MESSAGE commented??
-    s.send("DISP:WIND1:TRAC1:Y:AUTO;*OPC?\n")
+    s.send(b"DISP:WIND1:TRAC1:Y:AUTO;*OPC?\n")
     time.sleep(70)
 
-    s.send("INIT:CONT OFF;*OPC?\n")
+    s.send(b"INIT:CONT OFF;*OPC?\n")
     time.sleep(5)
 
     # Read Phase value and transfer to host controller
@@ -251,12 +251,12 @@ def measure_s11(fname=None):
 
     # Define data type and chanel for Data transfer reference
     # SCPI Programer guide E5061A
-    s.send("CALC1:FORM IMAG;*OPC?\n")
+    s.send(b"CALC1:FORM IMAG;*OPC?\n")
 
     # save data internal memory
-    s.send('MMEM:STOR:FDAT "D:\\Auto\\EDGES_p.csv";*OPC?\n')
+    s.send(b'MMEM:STOR:FDAT "D:\\Auto\\EDGES_p.csv";*OPC?\n')
     # transfer data to host controller
-    s.send('MMEM:TRAN? "D:\\Auto\\EDGES_p.csv";*OPC?\n')
+    s.send(b'MMEM:TRAN? "D:\\Auto\\EDGES_p.csv";*OPC?\n')
     time.sleep(1)
     data_phase = s.recv(
         180000
@@ -270,9 +270,9 @@ def measure_s11(fname=None):
 
     # Read Magnitude value and transfer to host controller
     # -----------------------------------------------------------
-    s.send("CALC1:FORM REAL;*OPC?\n")
-    s.send('MMEM:STOR:FDAT "D:\\Auto\\EDGES_m.csv";*OPC?\n')
-    s.send('MMEM:TRAN? "D:\\Auto\\EDGES_m.csv";*OPC?\n')
+    s.send(b"CALC1:FORM REAL;*OPC?\n")
+    s.send(b'MMEM:STOR:FDAT "D:\\Auto\\EDGES_m.csv";*OPC?\n')
+    s.send(b'MMEM:TRAN? "D:\\Auto\\EDGES_m.csv";*OPC?\n')
     time.sleep(1)
     data_mag = s.recv(180000)
 
@@ -303,40 +303,40 @@ def receiver_s11(fname):
     # -----------------------------------------------------
     #       set the output power level there are different level of attenuation
     #       check document Agilent E5070B/E5071B ENA programmers guide page no 705
-    s.send("SOUR:POW:ATT 30;*OPC?\n")
-    s.send("SOUR:POW -35.00;*OPC?\n")
+    s.send(b"SOUR:POW:ATT 30;*OPC?\n")
+    s.send(b"SOUR:POW -35.00;*OPC?\n")
     time.sleep(0.5)
     # -----------------------------------------------------
 
-    s.send("SENS:SWE:POIN 641;*OPC?\n")
-    s.send("SENS:BWID 100;*OPC?\n")
-    s.send("SENS:AVER:STAT 1;*OPC?\n")
-    s.send("SENS:AVER:CLE;*OPC?\n")
+    s.send(b"SENS:SWE:POIN 641;*OPC?\n")
+    s.send(b"SENS:BWID 100;*OPC?\n")
+    s.send(b"SENS:AVER:STAT 1;*OPC?\n")
+    s.send(b"SENS:AVER:CLE;*OPC?\n")
 
-    s.send("SENS:AVER:COUN 30;*OPC?\n")
-    s.send("INIT:CONT ON;*OPC?\n")
+    s.send(b"SENS:AVER:COUN 30;*OPC?\n")
+    s.send(b"INIT:CONT ON;*OPC?\n")
     time.sleep(10)
-    s.send("DISP:WIND1:TRAC1:Y:AUTO;*OPC?\n")
+    s.send(b"DISP:WIND1:TRAC1:Y:AUTO;*OPC?\n")
 
     _print_vna_settings(-35, 30)
 
     console.rule("Starting Measurements")
     # FIXME: what message?
-    s.send("DISP:WIND1:TRAC1:Y:AUTO;*OPC?\n")
+    s.send(b"DISP:WIND1:TRAC1:Y:AUTO;*OPC?\n")
     time.sleep(230)
-    s.send("INIT:CONT OFF;*OPC?\n")
+    s.send(b"INIT:CONT OFF;*OPC?\n")
 
     # ___________________________________________________________
     # Read Phase value and transfer to host controller
     # -----------------------------------------------------------
     # Define data type and chanel for Data transfer
     # reference SCPI Programer guide E5061A
-    s.send("CALC1:FORM IMAG;*OPC?\n")
+    s.send(b"CALC1:FORM IMAG;*OPC?\n")
 
     # save data internal memory
-    s.send('MMEM:STOR:FDAT "D:\\Auto\\EDGES_p.csv";*OPC?\n')
+    s.send(b'MMEM:STOR:FDAT "D:\\Auto\\EDGES_p.csv";*OPC?\n')
     # transfer data to host controller
-    s.send('MMEM:TRAN? "D:\\Auto\\EDGES_p.csv";*OPC?\n')
+    s.send(b'MMEM:TRAN? "D:\\Auto\\EDGES_p.csv";*OPC?\n')
     time.sleep(1)
     data_phase = s.recv(
         180000
@@ -351,9 +351,9 @@ def receiver_s11(fname):
     # ___________________________________________________________
     # Read Magnitude value and transfer to host controller
     # -----------------------------------------------------------
-    s.send("CALC1:FORM REAL;*OPC?\n")
-    s.send('MMEM:STOR:FDAT "D:\\Auto\\EDGES_m.csv";*OPC?\n')
-    s.send('MMEM:TRAN? "D:\\Auto\\EDGES_m.csv";*OPC?\n')
+    s.send(b"CALC1:FORM REAL;*OPC?\n")
+    s.send(b'MMEM:STOR:FDAT "D:\\Auto\\EDGES_m.csv";*OPC?\n')
+    s.send(b'MMEM:TRAN? "D:\\Auto\\EDGES_m.csv";*OPC?\n')
     time.sleep(1)
     data_mag = s.recv(180000)
 
@@ -386,18 +386,18 @@ def vna_calib():
     # ------------------------------------------------------
     #       set the output power level there are different level of attenuation
     #       check document Agilent E5070B/E5071B ENA programmers guide page no 705
-    s.send("SOUR:POW:ATT 0;*OPC?\n")
-    s.send("SOUR:POW 0.00;*OPC?\n")
+    s.send(b"SOUR:POW:ATT 0;*OPC?\n")
+    s.send(b"SOUR:POW 0.00;*OPC?\n")
     # -----------------------------------------------------
 
-    s.send("SENS1:CORR:COLL:CKIT 1;*OPC?\n")
+    s.send(b"SENS1:CORR:COLL:CKIT 1;*OPC?\n")
 
-    s.send("SENS:SWE:POIN 641;*OPC?\n")
-    s.send("SENS:BWID 100;*OPC?\n")
-    s.send("SENS:AVER:STAT 1;*OPC?\n")
-    s.send("SENS:AVER:CLE;*OPC?\n")
+    s.send(b"SENS:SWE:POIN 641;*OPC?\n")
+    s.send(b"SENS:BWID 100;*OPC?\n")
+    s.send(b"SENS:AVER:STAT 1;*OPC?\n")
+    s.send(b"SENS:AVER:CLE;*OPC?\n")
 
-    s.send("SENS:AVER:COUN 10;*OPC?\n")
+    s.send(b"SENS:AVER:COUN 10;*OPC?\n")
 
     _print_vna_settings(0, 10)
 
@@ -441,18 +441,18 @@ def vna_calib_receiver_reading():
     # ------------------------------------------------------
     #       set the output power level there are different level of attenuation
     #       check document Agilent E5070B/E5071B ENA programmers guide page no 705
-    s.send("SOUR:POW:ATT 30;*OPC?\n")
-    s.send("SOUR:POW -35.00;*OPC?\n")
+    s.send(b"SOUR:POW:ATT 30;*OPC?\n")
+    s.send(b"SOUR:POW -35.00;*OPC?\n")
     # -----------------------------------------------------
 
-    s.send("SENS1:CORR:COLL:CKIT 1;*OPC?\n")
+    s.send(b"SENS1:CORR:COLL:CKIT 1;*OPC?\n")
 
-    s.send("SENS:SWE:POIN 641;*OPC?\n")
-    s.send("SENS:BWID 100;*OPC?\n")
-    s.send("SENS:AVER:STAT 1;*OPC?\n")
-    s.send("SENS:AVER:CLE;*OPC?\n")
+    s.send(b"SENS:SWE:POIN 641;*OPC?\n")
+    s.send(b"SENS:BWID 100;*OPC?\n")
+    s.send(b"SENS:AVER:STAT 1;*OPC?\n")
+    s.send(b"SENS:AVER:CLE;*OPC?\n")
 
-    s.send("SENS:AVER:COUN 30;*OPC?\n")
+    s.send(b"SENS:AVER:COUN 30;*OPC?\n")
 
     _print_vna_settings(-35, 30)
 
