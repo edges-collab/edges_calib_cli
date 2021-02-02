@@ -192,11 +192,11 @@ def run():
     # Create directory structure for no directory within seven days
     # ------------------------------------------------------
     if not s11_path.exists():
-        s11_path.mkdirs(parents=True)
+        s11_path.mkdir(parents=True)
     if not spec_path.exists():
-        spec_path.mkdirs(parents=True)
+        spec_path.mkdir(parents=True)
     if not res_path.exists():
-        res_path.mkdirs(parents=True)
+        res_path.mkdir(parents=True)
 
     # ------------------------------------------------------
     #      Starting load calibration
