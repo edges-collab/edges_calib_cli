@@ -174,6 +174,7 @@ def measure_switching_state_s11():
 def _binblock_raw(data_in):
     # Find the start position of the IEEE header, which starts with a '#'.
     startpos = data_in.find(b"#")
+    logger.debug(f"Startpos: {startpos}")
 
     # Check for problem with start position.
     if startpos < 0:
@@ -182,9 +183,11 @@ def _binblock_raw(data_in):
     # Find the number that follows '#' symbol.  This is the number of digits in the block
     # length.
     size_of_length = int(data_in[startpos + 1])
+    logger.debug(f"size_of_length: {size_of_length}")
+    logger.debug(f"data_in: {data_in}")
 
     # Now that we know how many digits are in the size value, get the size of the data file.
-    image_size = int(data_in[startpos + 2 : startpos + 2 + size_of_length])
+    image_size = int(data_in[(startpos + 2) : (startpos + 2 + size_of_length)])
 
     # Get the length from the header
     offset = startpos + size_of_length
@@ -421,15 +424,17 @@ def vna_calib():
 
 
 def _print_vna_settings(rf_power, n_averaging):
-    console.print("[bold] Settings for VNA calibration")
+    console.print()
+    console.rule("Settings for VNA calibration")
     console.print("IF                 =100Hz")
     console.print("Strat freq         =40MHz")
     console.print("Strop freq         =200MHz")
     console.print("No. of freq points =641")
-    console.print(f"RF power output    ={rf_power}dBm\n")
+    console.print(f"RF power output    ={rf_power}dBm")
     console.print(f"No. of averaging   ={n_averaging}")
     console.print("Calibration kit    =85033E Agilent ")
     console.rule()
+    console.print()
 
 
 def vna_calib_receiver_reading():
