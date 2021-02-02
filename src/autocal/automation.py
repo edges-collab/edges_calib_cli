@@ -182,7 +182,12 @@ def _binblock_raw(data_in):
 
     # Find the number that follows '#' symbol.  This is the number of digits in the block
     # length.
-    size_of_length = int(str(data_in[startpos + 1]))
+    size_of_length = int(data_in[startpos + 1].decode())
+    logger.debug("Data in[startpos:startpos+1]: ", data_in[startpos : startpos + 1])
+    logger.debug(
+        "Data in[startpos:startpos+1].decode(): ",
+        data_in[startpos : startpos + 1].decode(),
+    )
     logger.debug(f"size_of_length: {size_of_length}")
     logger.debug(f"data_in: {data_in}")
 
