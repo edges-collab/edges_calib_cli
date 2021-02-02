@@ -1,6 +1,15 @@
 # edges_calib_cli
-automated calibration of edges receiver
 
+**Automated calibration of edges receiver**
+
+## Installation
+
+You need to separately install u3 and u6. They can be installed following the instructions
+at https://labjack.com/support/software/examples/ud/labjackpython
+
+Then just `pip install .`.
+
+## Project Structure
 Main_calib.py
 
  This file calls the individual function for each load calibration. It also takes care of the naming convention and directory structure.
