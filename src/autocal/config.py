@@ -27,7 +27,7 @@ class Config:
             )
 
         with open(self.config_path, "r") as fl:
-            settings = yaml.load(fl)
+            settings = yaml.load(fl, Loader=yaml.FullLoader)
 
         self.fastspec_dir = Path(settings["fastspec_dir"])
         self.calib_dir = Path(settings["calib_dir"])

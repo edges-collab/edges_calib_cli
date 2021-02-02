@@ -52,7 +52,12 @@ def init():
 
     with open(Path("~/.edges-autocal").expanduser(), "w") as fl:
         yaml.dump(
-            {"calib_dir": calib_dr, "spec_dir": spect_dir, "fastspec_dir": pxspec}, fl
+            {
+                "calib_dir": str(calib_dr),
+                "spec_dir": str(spect_dir),
+                "fastspec_dir": str(pxspec),
+            },
+            fl,
         )
 
     console.print(
