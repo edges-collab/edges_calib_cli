@@ -185,7 +185,6 @@ def _binblock_raw(data_in):
     # length.
     size_of_length = int(data_in[startpos + 1])
     logger.debug(f"size_of_length: {size_of_length}")
-    logger.debug(f"data_in: {data_in}")
 
     # Now that we know how many digits are in the size value, get the size of the data file.
     image_size = int(data_in[(startpos + 2) : (startpos + 2 + size_of_length)])
