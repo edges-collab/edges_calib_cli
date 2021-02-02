@@ -476,3 +476,17 @@ def vna_calib_receiver_reading():
         )
 
     s.close()
+
+
+def power_handler(signum, frame):
+    """Switch off the 48V sp4t power supply controller while detecting ctrl+C."""
+    logger.warning("Ctrl+C detected exiting calibration")
+    config.p.terminate()
+    config.e.terminate()
+    config.u3io.getFeedback(u3.BitStateWrite(4, 1))
+    config.u3io.getFeedback(u3.BitStateWrite(5, 1))
+    config.u3io.getFeedback(u3.BitStateWrite(6, 1))
+    config.u3io.getFeedback(u3.BitStateWrite(7, 1))
+    time.sleep(1)
+    logger.warning("Exiting cleanly...")
+    exit(signum)

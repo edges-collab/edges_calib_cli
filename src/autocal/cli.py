@@ -16,10 +16,10 @@ from rich.console import Console
 from rich.logging import RichHandler
 
 from . import automation
-from .automation import vna_calib, vna_calib_receiver_reading
+from .automation import power_handler, vna_calib, vna_calib_receiver_reading
 from .config import config
 from .temp_sensor_with_time_U6 import temp_sensor as tmpsense
-from .utils import int_validator, power_handler
+from .utils import int_validator
 
 logging.basicConfig(
     level="NOTSET",
