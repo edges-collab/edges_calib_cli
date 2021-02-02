@@ -2,11 +2,7 @@
 import functools
 import logging
 import numpy as np
-import time
-import u3
 from questionary import ValidationError, Validator
-
-from .config import config
 
 logger = logging.getLogger(__name__)
 
@@ -43,3 +39,5 @@ def int_validator(minval=-np.inf, maxval=np.inf):
                 raise ValidationError(
                     message=f"Value must be an integer >= {minval} and <= {maxval}"
                 )
+
+    return IV
