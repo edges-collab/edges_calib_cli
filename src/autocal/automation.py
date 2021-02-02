@@ -173,7 +173,7 @@ def measure_switching_state_s11():
 
 def _binblock_raw(data_in):
     # Find the start position of the IEEE header, which starts with a '#'.
-    startpos = data_in.find("#")
+    startpos = data_in.find(b"#")
 
     # Check for problem with start position.
     if startpos < 0:
