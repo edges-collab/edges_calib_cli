@@ -252,6 +252,14 @@ def temp_sensor():
 
 
 @main.command()
+def mock_temp_sensor():
+    """Mock run of the temp sensor in a different process."""
+    epipe = subprocess.Popen(["autocal", "temp-sensor"])
+    time.sleep(60)
+    epipe.terminate()
+
+
+@main.command()
 def test_power_supply_box():
     """Test setting voltages on power supply box."""
     d = u3.U3()

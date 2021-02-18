@@ -12,11 +12,9 @@ logger = logging.getLogger(__name__)
 ABS_ZERO = 273.15
 
 
-def temp_sensor():
+def temp_sensor(filename="Temperature.csv"):
     """Measure thermistor temperature."""
     connection = u6.U6()
-
-    filename = "Temperature.csv"
 
     with open(filename, "w") as csvfile:
         fieldnames = [

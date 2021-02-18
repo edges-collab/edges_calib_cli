@@ -107,12 +107,13 @@ def run_load(load, run_time):
         "[bold]Starting the spectrum observing program and temperature monitoring program"
     )
 
-    subprocess.Popen(
+    fpipe = subprocess.Popen(
         [config.fastspec_path, "-i", config.fastspec_ini, "-s", str(run_time), "-p"]
     )
 
-    epipe = subprocess.Popen(["autocal", "temp_sensor"])
-    time.sleep(run_time + 60)
+    epipe = subprocess.Popen(["autocal", "temp-sensor"])
+
+    fpipe.wait()
 
     console.rule("[bold]Finished taking spectra.")
 
@@ -122,7 +123,6 @@ def run_load(load, run_time):
     console.print("[bold]Taking Second Set of S11 measurements...")
     take_all_s11(2)
 
-    # TODO: why don't we termine `pipe`?
     epipe.terminate()
 
 
