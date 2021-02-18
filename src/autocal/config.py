@@ -1,6 +1,7 @@
 """Configuration options for the package."""
 import u3
 import yaml
+from LabJackPython import NullHandleException
 from pathlib import Path
 
 from .utils import singleton
@@ -36,6 +37,8 @@ class Config:
         self.fastspec_path = self.fastspec_dir / "fastspec_single"
         self.fastspec_ini = self.fastspec_dir / "edges.ini"
 
+        self.u3io = None
+
         if init:
             self.initialize()
 
@@ -53,3 +56,5 @@ try:
     config = Config("~/.edges-autocal")
 except IOError:
     config = None
+except NullHandleException:
+    config = Config("~/.edges-autocal", init=False)
