@@ -140,7 +140,10 @@ def run():
                 logger.error(f"Please remove the existing folder: {folder.name}")
                 sys.exit()
 
-            calobs = CalibrationObservation(folder)
+            calobs = CalibrationObservation(
+                folder, include_previous=False, compile_from_def=False
+            )
+
             obs_path = calobs.path
 
     # ---------------------------------------------------------
