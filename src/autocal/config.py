@@ -57,4 +57,8 @@ try:
 except IOError:
     config = None
 except NullHandleException:
+    # If u3 was instantiated in some other process, it can't be instantiated again here.
+    # This will cause a lot of functions to error (since u3io won't be defined). But
+    # some functions don't need it, and we still need to run them (especially the
+    # temp_sensor function, which is run in a separate process).
     config = Config("~/.edges-autocal", init=False)

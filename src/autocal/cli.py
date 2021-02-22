@@ -126,14 +126,13 @@ def run():
         ):
 
             keep_going = qs.confirm(
-                "Previous calibration exists for these specs within the last 2 weeks. Add these measurements to those?"
+                "Previous calibration exists for these specs within the last 2 weeks. Add these "
+                "measurements to those? "
             ).ask()
-            if keep_going:
-                receiver = folder.name
-            else:
+            if not keep_going:
                 logger.error(f"Please remove the existing folder: {folder.name}")
                 sys.exit()
-            f"{now.year}_{now.month:02}_{now.day:02}_040_to_200MHz"
+
             calobs = CalibrationObservation(folder)
             obs_path = calobs.path
 
@@ -157,15 +156,20 @@ def run():
     ).ask()
 
     # ------------------------------------------------------
-    if calobs:
-        run_num_spec = calobs.run_num["Spectra"].get(LOAD_ALIASES.inverse[load], 0)
-        run_num_res = calobs.run_num["Resistance"].get(LOAD_ALIASES.inverse[load], 0)
-        run_num_s11 = calobs.run_num["S11"].get(LOAD_ALIASES.inverse[load], 0)
+    if calobs is not None:
+        run_num_spec = calobs.run_num["Spectra"].get(LOAD_ALIASES.inverse[load], 1)
+        run_num_res = calobs.run_num["Resistance"].get(LOAD_ALIASES.inverse[load], 1)
+        run_num_s11 = calobs.run_num["S11"].get(LOAD_ALIASES.inverse[load], 1)
         if not (run_num_res == run_num_spec == run_num_s11):
             raise ValueError(
-                "Existing S11, Resistance and Spectra run numbers don't match. Please fix!"
+                "Existing S11, Resistance and Spectra run numbers don't match "
+                f"({run_num_s11}, {run_num_res}, {run_num_spec}). Please fix!"
             )
-        run_num = run_num_spec + 1
+        run_num = qs.text(
+            f"Existing run_number={run_num_res}. Set this run_num: ",
+            validator=int_validator(run_num_res + 1),
+            default=run_num_res + 1,
+        )
     else:
         run_num = 1
 
@@ -173,7 +177,7 @@ def run():
 
     spec_path = obs_path / "Spectra"
     res_path = obs_path / "Resistance"
-    s11_path = obs_path / "S11" / load
+    s11_path = obs_path / "S11" / f"{load}{run_num:02}"
 
     # ---------------------------------------------
     # ---------------------------------------------
@@ -213,12 +217,12 @@ def run():
     # Move the spectra
     # ------------------------------------------------------
     for fl in config.spec_dir.glob("*.acq"):
-        dest_path = spec_path / f"{load}_{run_num}_{fl.name}"
+        dest_path = spec_path / f"{load}_{run_num:02}_{fl.name}"
         stem = fl.stem
         fl.replace(dest_path)
 
     for fl in cwd.glob("*.csv"):
-        dest_path = res_path / f"{load}_{run_num}_{stem}.csv"
+        dest_path = res_path / f"{load}_{run_num:02}_{stem}.csv"
         fl.replace(dest_path)
 
     for fl in cwd.glob("*.s1p"):
