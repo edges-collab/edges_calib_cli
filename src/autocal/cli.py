@@ -124,7 +124,7 @@ def run():
         )
 
         print("temp=", temp, match["temp"])
-        print("date=", now, existing_date)
+        print("date=", now, existing_date, (now - existing_date).days)
         print("receiver=", rec, match["rcv_num"])
         if (
             (temp == int(match["temp"]))
