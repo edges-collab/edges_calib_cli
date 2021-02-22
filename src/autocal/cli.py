@@ -90,11 +90,11 @@ def run():
         default="25",
     ).ask()
     if temp == "custom":
-        temp = int(
-            qs.text(
-                "Enter temperature in °C:", validate=int_validator(minval=0, maxval=100)
-            ).ask()
-        )
+        temp = qs.text(
+            "Enter temperature in °C:", validate=int_validator(minval=0, maxval=100)
+        ).ask()
+
+    temp = int(temp)
 
     receiver = qs.select(
         "Which receiver are you calibrating?",
@@ -102,7 +102,7 @@ def run():
         default="Receiver01",
     ).ask()
     obs_path = config.calib_dir / f"{receiver}_{temp}C_{date_str}"
-    rec = int(receiver[-1])
+    rec = int(receiver[-2:])
 
     # ------------------------------------------------------------------
     # check any calibration folder created in last two weeks.
