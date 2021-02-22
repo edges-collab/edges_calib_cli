@@ -110,15 +110,19 @@ def run():
     # considering that it is a part of continuous calibration process
     folders = config.calib_dir.glob("*")
     calobs = None
+    print(folders)
     for folder in folders:
+        print(f"Trying {folder.name}")
         match = re.match(CalibrationObservation.pattern, folder.name)
 
         if match is None:
+            print("got no match")
             continue
 
         existing_date = dt.datetime(
             int(match["year"]), int(match["month"]), int(match["day"])
         )
+
         if (
             (temp == int(match["temp"]))
             and (now - existing_date).days <= 14
