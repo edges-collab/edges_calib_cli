@@ -14,15 +14,16 @@ from edges_io.io import LOAD_ALIASES, CalibrationObservation
 from pathlib import Path
 from rich.console import Console
 from rich.logging import RichHandler
+from rich.panel import Panel
 
 from . import automation
 from .automation import power_handler, vna_calib, vna_calib_receiver_reading
 from .config import config
 from .temp_sensor_with_time_U6 import temp_sensor as tmpsense
-from .utils import int_validator
+from .utils import float_validator, int_validator
 
 logging.basicConfig(
-    level="NOTSET",
+    level="INFO",
     format="%(message)s",
     datefmt="[%X]",
     handlers=[RichHandler(rich_tracebacks=True)],
@@ -63,6 +64,42 @@ def init():
     console.print(
         ":heavy_check_mark: [green] Success! Configuration written to ~/.edges-autocal"
     )
+
+
+def write_purpose(def_file):
+    """Add a message/notes to the definition."""
+    with open(def_file, "r") as fl:
+        defn = yaml.load(fl, Loader=yaml.FullLoader)
+
+    purpose = defn.get("purpose", "")
+    if purpose:
+        console.print(
+            Panel(
+                purpose, title="Existing Stated Purpose", width=min(150, console.width)
+            )
+        )
+        change_purpose = qs.confirm("Is this purpose still accurate?").ask()
+
+    if not purpose or change_purpose:
+        purpose = qs.text("What is the purpose of this calibration?").ask()
+        defn["purpose"] = purpose
+
+    with open(def_file, "w") as fl:
+        yaml.dump(defn, fl)
+
+
+def write_history(def_file, run_num, load, now):
+    """Write a line to the history in definition.yaml."""
+    with open(def_file, "r") as fl:
+        defn = yaml.load(fl, Loader=yaml.FullLoader)
+
+    history = defn.get("history", [])
+    history.append(
+        f"Ran {load}, run_num={run_num}, at {now.strftime('%Y-%m-%d %H:%M:%S')}"
+    )
+
+    with open(def_file, "w") as fl:
+        yaml.dump(defn, fl)
 
 
 @main.command()
@@ -110,13 +147,10 @@ def run():
     # considering that it is a part of continuous calibration process
     folders = config.calib_dir.glob("*")
     calobs = None
-    print(folders)
     for folder in folders:
-        print(f"Trying {folder.name}")
         match = re.match(CalibrationObservation.pattern, folder.name)
 
         if match is None:
-            print("got no match")
             continue
 
         existing_date = dt.datetime(
@@ -130,8 +164,8 @@ def run():
         ):
 
             keep_going = qs.confirm(
-                "Previous calibration exists for these specs within the last 2 weeks. Add these "
-                "measurements to those? "
+                "Previous calibration directory exists for these specs within the last 2"
+                " weeks. Add these measurements to those? "
             ).ask()
             if not keep_going:
                 logger.error(f"Please remove the existing folder: {folder.name}")
@@ -162,9 +196,11 @@ def run():
         default="Ambient",
     ).ask()
 
+    load_alias = LOAD_ALIASES.inverse.get(load, None)
+
     # ------------------------------------------------------
-    if calobs is not None:
-        run_num = calobs.run_num.get(LOAD_ALIASES.inverse[load], 1)
+    if calobs is not None and hasattr(calobs.s11, load_alias):
+        run_num = calobs.run_num.get(load_alias, 1)
         run_num = int(
             qs.text(
                 f"Existing run_number={run_num}. Set this run_num: ",
@@ -180,18 +216,18 @@ def run():
     spec_path = obs_path / "Spectra"
     res_path = obs_path / "Resistance"
     s11_path = obs_path / "S11" / f"{load}{run_num:02}"
+    def_file = obs_path / "definition.yaml"
+    if not def_file.exists():
+        def_file.touch()
 
-    # ---------------------------------------------
+    write_purpose(def_file)
+
     # ---------------------------------------------
     # remove all residue *.acq and *.csv files from previous run
-
-    clear_acq = config.spec_dir.glob("*.acq")
-    for item in clear_acq:
+    for item in config.spec_dir.glob("*.acq"):
         item.unlink()
 
-    cwd = Path(".")
-    clear_csv = cwd.glob("*.csv")
-    for item in clear_csv:
+    for item in Path(".").glob("*.csv"):
         item.unlink()
 
     # -------------------------------------------------------
@@ -211,7 +247,29 @@ def run():
         automation.run_load(load, time)
 
     elif load == "SwitchingState":
+        with open(def_file, "r") as fl:
+            defn = yaml.load(fl)
+
         automation.measure_switching_state_s11()
+        male_resistance = float(
+            qs.text(
+                "Please measure the male resistance (Ohms) and input:",
+                validate=float_validator(40, 60),
+            ).ask()
+        )
+        female_resistance = float(
+            qs.text(
+                "Please measure the female resistance (Ohms) and input:",
+                validate=float_validator(40, 60),
+            ).ask()
+        )
+        defn["measurements"] = {
+            "resistance_m": male_resistance,
+            "resistance_f": female_resistance,
+        }
+        with open(def_file, "w") as fl:
+            yaml.dump(defn, fl)
+
     elif load == "ReceiverReading":
         automation.measure_receiver_reading()
 
@@ -223,14 +281,15 @@ def run():
         stem = fl.stem
         fl.replace(dest_path)
 
-    for fl in cwd.glob("*.csv"):
+    for fl in Path(".").glob("*.csv"):
         dest_path = res_path / f"{load}_{run_num:02}_{stem}.csv"
         fl.replace(dest_path)
 
-    for fl in cwd.glob("*.s1p"):
+    for fl in Path(".").glob("*.s1p"):
         dest_path = s11_path / fl
         fl.replace(dest_path)
 
+    write_history(def_file, run_num=run_num, load=load, now=now)
     console.rule("[green bold]Finished Calibration!")
 
 

@@ -41,3 +41,26 @@ def int_validator(minval=-np.inf, maxval=np.inf):
                 )
 
     return IV
+
+
+def float_validator(minval=-np.inf, maxval=np.inf):
+    """Return a questionary validator that only accepts ints between some bounds."""
+
+    class FV(Validator):
+        def validate(self, document):
+            if len(document.text) == 0:
+                raise ValidationError(
+                    message="Please enter a value", cursor_position=len(document.text),
+                )
+
+            try:
+                val = float(document.text)
+            except TypeError:
+                raise ValidationError(message="Value must be a float.")
+
+            if val < minval or val > maxval:
+                raise ValidationError(
+                    message=f"Value must be a float >= {minval} and <= {maxval}"
+                )
+
+    return FV
