@@ -69,7 +69,7 @@ def init():
 def write_purpose(def_file):
     """Add a message/notes to the definition."""
     with open(def_file, "r") as fl:
-        defn = yaml.load(fl, Loader=yaml.FullLoader)
+        defn = yaml.load(fl, Loader=yaml.FullLoader) or {}
 
     purpose = defn.get("purpose", "")
     if purpose:
@@ -91,7 +91,7 @@ def write_purpose(def_file):
 def write_history(def_file, run_num, load, now):
     """Write a line to the history in definition.yaml."""
     with open(def_file, "r") as fl:
-        defn = yaml.load(fl, Loader=yaml.FullLoader)
+        defn = yaml.load(fl, Loader=yaml.FullLoader) or {}
 
     history = defn.get("history", [])
     history.append(
