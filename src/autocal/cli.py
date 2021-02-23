@@ -167,18 +167,11 @@ def run():
 
     # ------------------------------------------------------
     if calobs is not None:
-        run_num_spec = calobs.run_num["Spectra"].get(LOAD_ALIASES.inverse[load], 1)
-        run_num_res = calobs.run_num["Resistance"].get(LOAD_ALIASES.inverse[load], 1)
-        run_num_s11 = calobs.run_num["S11"].get(LOAD_ALIASES.inverse[load], 1)
-        if not (run_num_res == run_num_spec == run_num_s11):
-            raise ValueError(
-                "Existing S11, Resistance and Spectra run numbers don't match "
-                f"({run_num_s11}, {run_num_res}, {run_num_spec}). Please fix!"
-            )
+        run_num = calobs.run_num.get(LOAD_ALIASES.inverse[load], 1)
         run_num = qs.text(
-            f"Existing run_number={run_num_res}. Set this run_num: ",
-            validator=int_validator(run_num_res + 1),
-            default=run_num_res + 1,
+            f"Existing run_number={run_num}. Set this run_num: ",
+            validator=int_validator(run_num + 1),
+            default=run_num + 1,
         )
     else:
         run_num = 1
