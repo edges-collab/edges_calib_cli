@@ -123,9 +123,6 @@ def run():
             int(match["year"]), int(match["month"]), int(match["day"])
         )
 
-        print("temp=", temp, match["temp"])
-        print("date=", now, existing_date, (now - existing_date).days)
-        print("receiver=", rec, match["rcv_num"])
         if (
             (temp == int(match["temp"]))
             and (now - existing_date).days <= 14
