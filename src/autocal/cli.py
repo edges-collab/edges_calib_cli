@@ -1,6 +1,7 @@
 """CLI functions for autocal."""
 import click
 import datetime as dt
+import functools
 import logging
 import questionary as qs
 import re
@@ -66,11 +67,25 @@ def init():
     )
 
 
-def write_purpose(def_file):
-    """Add a message/notes to the definition."""
-    with open(def_file, "r") as fl:
-        defn = yaml.load(fl, Loader=yaml.FullLoader) or {}
+def definer(func):
+    """Make a function that writes to the definition.yaml."""
 
+    @functools.wraps(func)
+    def inner(def_file, *args, **kwargs):
+        with open(def_file, "r") as fl:
+            defn = yaml.load(fl, Loader=yaml.FullLoader) or {}
+
+        defn = func(defn, *args, **kwargs)
+
+        with open(def_file, "w") as fl:
+            yaml.dump(defn, fl)
+
+    return inner
+
+
+@definer
+def write_purpose(defn):
+    """Add a message/notes to the definition."""
     purpose = defn.get("purpose", "")
     if purpose:
         console.print(
@@ -84,22 +99,38 @@ def write_purpose(def_file):
         purpose = qs.text("What is the purpose of this calibration?").ask()
         defn["purpose"] = purpose
 
-    with open(def_file, "w") as fl:
-        yaml.dump(defn, fl)
+    return defn
 
 
-def write_history(def_file, run_num, load, now):
+@definer
+def write_history(defn, run_num, load, now):
     """Write a line to the history in definition.yaml."""
-    with open(def_file, "r") as fl:
-        defn = yaml.load(fl, Loader=yaml.FullLoader) or {}
-
     history = defn.get("history", [])
     history.append(
         f"Ran {load}, run_num={run_num}, at {now.strftime('%Y-%m-%d %H:%M:%S')}"
     )
+    defn["history"] = history
+    return defn
 
-    with open(def_file, "w") as fl:
-        yaml.dump(defn, fl)
+
+@definer
+def write_resistance(defn, male=True, run_num=1):
+    """Write a male/female resistance to file."""
+    resistance = float(
+        qs.text(
+            "Please measure the resistance (Ohms):", validate=float_validator(40, 60),
+        ).ask()
+    )
+    if "measurements" not in defn:
+        defn["measurements"] = {}
+
+    if f"{run_num:02}" not in defn["measurements"]:
+        defn["measurements"][f"{run_num:02}"] = {}
+
+    defn["measurements"][f"{run_num:02}"][
+        f"resistance_{'m' if male else 'f'}"
+    ] = resistance
+    return defn
 
 
 @main.command()
@@ -247,31 +278,12 @@ def run():
         automation.run_load(load, time)
 
     elif load == "SwitchingState":
-        with open(def_file, "r") as fl:
-            defn = yaml.load(fl)
-
         automation.measure_switching_state_s11()
-        male_resistance = float(
-            qs.text(
-                "Please measure the male resistance (Ohms) and input:",
-                validate=float_validator(40, 60),
-            ).ask()
-        )
-        female_resistance = float(
-            qs.text(
-                "Please measure the female resistance (Ohms) and input:",
-                validate=float_validator(40, 60),
-            ).ask()
-        )
-        defn["measurements"] = {
-            "resistance_m": male_resistance,
-            "resistance_f": female_resistance,
-        }
-        with open(def_file, "w") as fl:
-            yaml.dump(defn, fl)
+        write_resistance(def_file, male=True, run_num=run_num)
 
     elif load == "ReceiverReading":
         automation.measure_receiver_reading()
+        write_resistance(def_file, male=False, run_num=run_num)
 
     # ------------------------------------------------------
     # Move the spectra
