@@ -171,7 +171,7 @@ def run():
         run_num = int(
             qs.text(
                 f"Existing run_number={run_num}. Set this run_num: ",
-                validator=int_validator(run_num + 1),
+                validate=int_validator(run_num + 1),
                 default=run_num + 1,
             ).ask()
         )
