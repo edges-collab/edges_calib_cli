@@ -35,7 +35,7 @@ def int_validator(minval=-np.inf, maxval=np.inf):
             except TypeError:
                 raise ValidationError(message="Value must be an integer.")
 
-            if val <= minval or val >= maxval:
+            if val < minval or val > maxval:
                 raise ValidationError(
                     message=f"Value must be an integer >= {minval} and <= {maxval}"
                 )
