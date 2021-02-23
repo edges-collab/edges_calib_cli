@@ -168,10 +168,12 @@ def run():
     # ------------------------------------------------------
     if calobs is not None:
         run_num = calobs.run_num.get(LOAD_ALIASES.inverse[load], 1)
-        run_num = qs.text(
-            f"Existing run_number={run_num}. Set this run_num: ",
-            validator=int_validator(run_num + 1),
-            default=run_num + 1,
+        run_num = int(
+            qs.text(
+                f"Existing run_number={run_num}. Set this run_num: ",
+                validator=int_validator(run_num + 1),
+                default=run_num + 1,
+            ).ask()
         )
     else:
         run_num = 1
