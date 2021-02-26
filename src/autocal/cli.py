@@ -16,6 +16,7 @@ from pathlib import Path
 from rich.console import Console
 from rich.logging import RichHandler
 from rich.panel import Panel
+from typing import Optional, Tuple
 
 from . import automation
 from .automation import power_handler, vna_calib, vna_calib_receiver_reading
@@ -144,11 +145,131 @@ def run():
 
     signal.signal(signal.SIGINT, power_handler)
 
+    calobs, now, obs_path, time = get_observation()
+
+    load = qs.select(
+        "Select a load for calibration",
+        choices=[
+            "Ambient",
+            "HotLoad",
+            "LongCableOpen",
+            "LongCableShorted",
+            "AntSim1",
+            "AntSim2",
+            "AntSim3",
+            "SwitchingState",
+            "ReceiverReading",
+        ],
+        default="Ambient",
+    ).ask()
+
+    run_num = get_run_num(calobs, load)
+
+    console.print(f"Performing run number {run_num}")
+
+    def_file, res_path, s11_path, spec_path = create_directory_structure(
+        load, obs_path, run_num
+    )
+
+    # ------------------------------------------------------
+    #      Starting load calibration
+    # ------------------------------------------------------
+    if load not in ["SwitchingState", "ReceiverReading"]:
+        automation.run_load(load, time)
+
+    elif load == "SwitchingState":
+        automation.measure_switching_state_s11()
+        write_resistance(def_file, male=True, run_num=run_num)
+
+    elif load == "ReceiverReading":
+        automation.measure_receiver_reading()
+        write_resistance(def_file, male=False, run_num=run_num)
+
+    # ------------------------------------------------------
+    # Move the spectra
+    # ------------------------------------------------------
+    cleanup(load, res_path, run_num, s11_path, spec_path)
+
+    write_history(def_file, run_num=run_num, load=load, now=now)
+    console.rule("[green bold]Finished Calibration!")
+
+
+def cleanup(load, res_path, run_num, s11_path, spec_path):
+    """Move raw files into correct locations."""
+    for fl in config.spec_dir.glob("*.acq"):
+        dest_path = spec_path / f"{load}_{run_num:02}_{fl.name}"
+        stem = fl.stem
+        fl.replace(dest_path)
+    for fl in Path(".").glob("*.csv"):
+        dest_path = res_path / f"{load}_{run_num:02}_{stem}.csv"
+        fl.replace(dest_path)
+    for fl in Path(".").glob("*.s1p"):
+        dest_path = s11_path / fl
+        fl.replace(dest_path)
+
+
+def create_directory_structure(
+    load, obs_path, run_num
+) -> Tuple[Path, Path, Path, Path]:
+    """Create an empty directory structure for an observation."""
+    spec_path = obs_path / "Spectra"
+    res_path = obs_path / "Resistance"
+    s11_path = obs_path / "S11" / f"{load}{run_num:02}"
+    def_file = obs_path / "definition.yaml"
+    if not def_file.exists():
+        def_file.touch()
+    write_purpose(def_file)
+    # ---------------------------------------------
+    # remove all residue *.acq and *.csv files from previous run
+    for item in config.spec_dir.glob("*.acq"):
+        item.unlink()
+    for item in Path(".").glob("*.csv"):
+        item.unlink()
+    # -------------------------------------------------------
+    # Create directory structure for no directory within seven days
+    # ------------------------------------------------------
+    if not s11_path.exists():
+        s11_path.mkdir(parents=True)
+    if not spec_path.exists():
+        spec_path.mkdir(parents=True)
+    if not res_path.exists():
+        res_path.mkdir(parents=True)
+    return def_file, res_path, s11_path, spec_path
+
+
+def get_run_num(calobs: CalibrationObservation, load: str) -> int:
+    """Obtain the correct run number for this load."""
+    if load == "SwitchingState":
+        load_alias = "switching_state"
+    elif load == "ReceiverReading":
+        load_alias = "receiver_reading"
+    elif load in LOAD_ALIASES.inverse:
+        load_alias = LOAD_ALIASES.inverse[load]
+    else:
+        load_alias = load
+    # ------------------------------------------------------
+    if calobs is not None and load_alias in calobs.s11.run_num:
+        run_num = calobs.s11.run_num[load_alias]
+        run_num = int(
+            qs.text(
+                f"Existing run_number={run_num}. Set this run_num: ",
+                validate=int_validator(run_num + 1),
+                default=str(run_num + 1),
+            ).ask()
+        )
+    else:
+        run_num = 1
+    return run_num
+
+
+def get_observation() -> Tuple[CalibrationObservation, dt.datetime, Path, int]:
+    """Get parameters of the observation itself."""
     time = int(
         qs.text(
             "Time (seconds) to run calibration:", validate=int_validator(minval=39)
         ).ask()
     )
+
     now = dt.datetime.now()
     date_str = f"{now.year}_{now.month:02}_{now.day:02}_040_to_200MHz"
 
@@ -161,7 +282,6 @@ def run():
         temp = qs.text(
             "Enter temperature in °C:", validate=int_validator(minval=0, maxval=100)
         ).ask()
-
     temp = int(temp)
 
     receiver = qs.select(
@@ -169,6 +289,7 @@ def run():
         choices=["Receiver01", "Receiver02", "Receiver03"],
         default="Receiver01",
     ).ask()
+
     obs_path = config.calib_dir / f"{receiver}_{temp}C_{date_str}"
     rec = int(receiver[-2:])
 
@@ -207,102 +328,7 @@ def run():
             )
 
             obs_path = calobs.path
-
-    # ---------------------------------------------------------
-    #       Clean up any previous ,acq or .csv files
-    # ---------------------------------------------------------
-    load = qs.select(
-        "Select a load for calibration",
-        choices=[
-            "Ambient",
-            "HotLoad",
-            "LongCableOpen",
-            "LongCableShort",
-            "AntSim1",
-            "AntSim2",
-            "AntSim3",
-            "SwitchingState",
-            "ReceiverReading",
-        ],
-        default="Ambient",
-    ).ask()
-
-    load_alias = LOAD_ALIASES.inverse.get(load, None)
-
-    # ------------------------------------------------------
-    if calobs is not None and hasattr(calobs.s11, load_alias):
-        run_num = calobs.run_num.get(load_alias, 1)
-        run_num = int(
-            qs.text(
-                f"Existing run_number={run_num}. Set this run_num: ",
-                validate=int_validator(run_num + 1),
-                default=str(run_num + 1),
-            ).ask()
-        )
-    else:
-        run_num = 1
-
-    console.print(f"Performing run number {run_num}")
-
-    spec_path = obs_path / "Spectra"
-    res_path = obs_path / "Resistance"
-    s11_path = obs_path / "S11" / f"{load}{run_num:02}"
-    def_file = obs_path / "definition.yaml"
-    if not def_file.exists():
-        def_file.touch()
-
-    write_purpose(def_file)
-
-    # ---------------------------------------------
-    # remove all residue *.acq and *.csv files from previous run
-    for item in config.spec_dir.glob("*.acq"):
-        item.unlink()
-
-    for item in Path(".").glob("*.csv"):
-        item.unlink()
-
-    # -------------------------------------------------------
-    # Create directory structure for no directory within seven days
-    # ------------------------------------------------------
-    if not s11_path.exists():
-        s11_path.mkdir(parents=True)
-    if not spec_path.exists():
-        spec_path.mkdir(parents=True)
-    if not res_path.exists():
-        res_path.mkdir(parents=True)
-
-    # ------------------------------------------------------
-    #      Starting load calibration
-    # ------------------------------------------------------
-    if load not in ["SwitchingState", "ReceiverReading"]:
-        automation.run_load(load, time)
-
-    elif load == "SwitchingState":
-        automation.measure_switching_state_s11()
-        write_resistance(def_file, male=True, run_num=run_num)
-
-    elif load == "ReceiverReading":
-        automation.measure_receiver_reading()
-        write_resistance(def_file, male=False, run_num=run_num)
-
-    # ------------------------------------------------------
-    # Move the spectra
-    # ------------------------------------------------------
-    for fl in config.spec_dir.glob("*.acq"):
-        dest_path = spec_path / f"{load}_{run_num:02}_{fl.name}"
-        stem = fl.stem
-        fl.replace(dest_path)
-
-    for fl in Path(".").glob("*.csv"):
-        dest_path = res_path / f"{load}_{run_num:02}_{stem}.csv"
-        fl.replace(dest_path)
-
-    for fl in Path(".").glob("*.s1p"):
-        dest_path = s11_path / fl
-        fl.replace(dest_path)
-
-    write_history(def_file, run_num=run_num, load=load, now=now)
-    console.rule("[green bold]Finished Calibration!")
+    return calobs, now, obs_path, time
 
 
 @main.command()
