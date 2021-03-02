@@ -94,7 +94,7 @@ def write_purpose(defn):
                 purpose, title="Existing Stated Purpose", width=min(150, console.width)
             )
         )
-        change_purpose = qs.confirm("Is this purpose still accurate?").ask()
+        change_purpose = not qs.confirm("Is this purpose still accurate?").ask()
 
     if not purpose or change_purpose:
         purpose = qs.text("What is the purpose of this calibration?").ask()
@@ -247,7 +247,7 @@ def get_run_num(calobs: CalibrationObservation, load: str) -> int:
         load_alias = LOAD_ALIASES.inverse[load]
     else:
         load_alias = load
-    # ------------------------------------------------------
+
     if calobs is not None and load_alias in calobs.s11.run_num:
         run_num = calobs.s11.run_num[load_alias]
         run_num = int(
