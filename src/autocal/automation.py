@@ -168,7 +168,7 @@ def measure_switching_state_s11():
             "Short": 28,
         }.items():
             if qs.confirm(f"{load} connected to receiver input?").ask():
-                take_s11(f"{load}{repeat:02}", voltage, 1, 1, 1, 0)
+                take_s11(f"{load}{repeat:02}", voltage)
 
 
 def _binblock_raw(data_in):
