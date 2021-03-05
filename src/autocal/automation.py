@@ -141,7 +141,7 @@ def measure_receiver_reading():
     ).ask():
         pass
 
-    for i in range(2):
+    for i in range(1, 3):
         for load in ["Match", "Open", "Short", "ReceiverReading"]:
             if qs.confirm(
                 f"Matched load connected to VNA {load}{i:02} measurement?"
@@ -159,7 +159,7 @@ def measure_switching_state_s11():
 
     console.rule("Starting SwitchingState measurements")
 
-    for repeat in range(2):
+    for repeat in range(1, 3):
         for load, voltage in {
             "ExternalMatch": 37,
             "ExternalOpen": 37,
@@ -405,17 +405,17 @@ def vna_calib():
 
     _print_vna_settings(0, 10)
 
-    console.print("Remaning procedure is done in the front pannel of VNA ")
-    console.print("Step1: Select Calibrate from the main menu")
-    console.print("Step2: Again select Calibrate")
-    console.print("Step3: Select 1-Port Cal")
-    console.print("Step4: Connect open to VNA port-1")
-    console.print("Step5: Select open and wait for 10 average")
-    console.print("Step6: Connect Short to VNA port-1")
-    console.print("Step7: Select Short and wait for 10 average")
-    console.print("Step8: Connect Load to VNA port-1")
-    console.print("Step9: Select Load and wait for 10 average")
-    console.print("Step10: Select Done")
+    console.print("Remaining procedure is done in the front panel of VNA:")
+    console.print("  1. Select Calibrate from the main menu")
+    console.print("  2. Again select Calibrate")
+    console.print("  3. Select 1-Port Cal")
+    console.print("  4. Connect open to VNA port-1")
+    console.print("  5. Select open and wait for 10 average")
+    console.print("  6. Connect Short to VNA port-1")
+    console.print("  7. Select Short and wait for 10 average")
+    console.print("  8. Connect Load to VNA port-1")
+    console.print("  9. Select Load and wait for 10 average")
+    console.print("  10. Select Done")
 
     if qs.confirm("Confirm that all these steps were taken?").ask():
         console.print(
