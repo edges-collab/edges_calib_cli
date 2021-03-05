@@ -219,12 +219,13 @@ def create_directory_structure(
     if not def_file.exists():
         def_file.touch()
     write_purpose(def_file)
-    # ---------------------------------------------
+
     # remove all residue *.acq and *.csv files from previous run
     for item in config.spec_dir.glob("*.acq"):
         item.unlink()
     for item in Path(".").glob("*.csv"):
         item.unlink()
+
     # -------------------------------------------------------
     # Create directory structure for no directory within seven days
     # ------------------------------------------------------
@@ -237,7 +238,7 @@ def create_directory_structure(
     return def_file, res_path, s11_path, spec_path
 
 
-def get_run_num(calobs: CalibrationObservation, load: str) -> int:
+def get_run_num(calobs: Optional[CalibrationObservation], load: str) -> int:
     """Obtain the correct run number for this load."""
     if load == "SwitchingState":
         load_alias = "switching_state"

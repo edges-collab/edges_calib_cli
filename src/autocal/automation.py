@@ -73,34 +73,34 @@ def run_load(load, run_time):
 
     console.rule(f"Starting {load} Calibration")
 
-    if qs.confirm(f"Connected {load} load to receiver input?").ask():
+    while not qs.confirm(f"Connected {load} load to receiver input?").ask():
         pass
 
     if load in ["Ambient", "HotLoad"]:
-        if qs.confirm(
+        while not qs.confirm(
             f"Ensured high-pass filter is connected to ports of {load} Load?"
         ).ask():
             pass
 
-        if qs.confirm(
+        while not qs.confirm(
             f"Ensured voltage supply connected to Ambient Load is set to "
             f"{'0V' if load == 'Ambient' else '12V'}?"
         ).ask():
             pass
 
-    if (
+    while not (
         load in ["LongCableOpen"]
         and qs.confirm("Ensured Open is connected to LongCable?").ask()
     ):
         pass
 
-    if (
+    while not (
         load in ["LongCableShort"]
         and qs.confirm("Ensured Short is connected to LongCable?").ask()
     ):
         pass
 
-    if qs.confirm("Ensured thermistor port is connected to labjack?").ask():
+    while not qs.confirm("Ensured thermistor port is connected to labjack?").ask():
         pass
 
     console.print(
@@ -118,9 +118,9 @@ def run_load(load, run_time):
     console.rule("[bold]Finished taking spectra.")
 
     console.print("")
-    console.print("[bold]Taking First Set of S11 measurements...")
+    console.print("[bold]Taking First Repeat of S11 measurements...")
     take_all_s11(1)
-    console.print("[bold]Taking Second Set of S11 measurements...")
+    console.print("[bold]Taking Second Repeat of S11 measurements...")
     take_all_s11(2)
 
     epipe.terminate()
@@ -405,7 +405,7 @@ def vna_calib():
     _print_vna_settings(0, 10)
 
     console.print("Remaning procedure is done in the front pannel of VNA ")
-    console.print("Step1: Selete Calibrate from the main menu")
+    console.print("Step1: Select Calibrate from the main menu")
     console.print("Step2: Again select Calibrate")
     console.print("Step3: Select 1-Port Cal")
     console.print("Step4: Connect open to VNA port-1")
