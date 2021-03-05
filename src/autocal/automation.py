@@ -437,7 +437,7 @@ def _print_vna_settings(rf_power, n_averaging):
     """
 
     console.print()
-    Panel(message, title="VNA Settings", width=min(150, console.width))
+    console.print(Panel(message, title="VNA Settings", width=min(150, console.width)))
     console.print()
 
 
