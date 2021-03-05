@@ -8,6 +8,7 @@ import subprocess
 import time
 import u3
 from rich.console import Console
+from rich.panel import Panel
 
 from .config import config
 
@@ -30,7 +31,7 @@ def _get_voltage_settings(voltage):
         raise ValueError(f"Voltage {voltage} not understood.")
 
 
-def take_s11(fname, voltage):
+def take_s11(fname, voltage, print_settings=True):
     """Take S11 with particular voltage settings."""
     settings = _get_voltage_settings(voltage)
 
@@ -41,7 +42,7 @@ def take_s11(fname, voltage):
     config.u3io.getFeedback(u3.BitStateWrite(7, settings[3]))
 
     logger.info(f"Taking {fname} measurement at {voltage}V...")
-    measure_s11(f"{fname}.s1p")
+    measure_s11(f"{fname}.s1p", print_settings=print_settings)
     config.u3io.getFeedback(u3.BitStateWrite(7, 1))
     logger.info(f"... saved as '{fname}.s1p'")
 
@@ -49,9 +50,9 @@ def take_s11(fname, voltage):
 def take_all_s11(repeat_num: int):
     """Take all S11 measurements for a load."""
     take_s11(f"External{repeat_num:02}", voltage=37)
-    take_s11(f"Match{repeat_num:02}", voltage=34)
-    take_s11(f"Short{repeat_num:02}", voltage=31.3)
-    take_s11(f"Open{repeat_num:02}", voltage=28)
+    take_s11(f"Match{repeat_num:02}", voltage=34, print_settings=False)
+    take_s11(f"Short{repeat_num:02}", voltage=31.3, print_settings=False)
+    take_s11(f"Open{repeat_num:02}", voltage=28, print_settings=False)
 
 
 def run_load(load, run_time):
@@ -214,7 +215,7 @@ def _setup(s):
     s.send(b"SENS:FREQ:STOP 200e6;*OPC?\n")
 
 
-def measure_s11(fname=None):
+def measure_s11(fname=None, print_settings=True):
     """Measure S11 once a load has been connected."""
     # Create a TCP/IP socket
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -238,10 +239,11 @@ def measure_s11(fname=None):
     time.sleep(10)
     s.send(b"DISP:WIND1:TRAC1:Y:AUTO;*OPC?\n")
 
-    _print_vna_settings(0, 10)
+    if print_settings:
+        _print_vna_settings(0, 10)
 
-    console.print()
-    console.rule("Starting Measurements")
+    logger.info(f"Starting VNA Measurements for {fname}")
+
     # FIXME: why is the above MESSAGE commented??
     s.send(b"DISP:WIND1:TRAC1:Y:AUTO;*OPC?\n")
     time.sleep(70)
@@ -291,7 +293,6 @@ def measure_s11(fname=None):
     s11[:, 0] = data_m_re[:, 0]
     s11[:, 1] = data_m_re[:, 1]
     s11[:, 2] = data_p_re[:, 1]
-    console.print("S11=", s11)
     fname = fname or "S11.csv"
     np.savetxt(fname, s11, delimiter=",")
     s.close()
@@ -425,16 +426,18 @@ def vna_calib():
 
 
 def _print_vna_settings(rf_power, n_averaging):
+    message = f"""
+    IF                 = 100 Hz
+    Start freq         = 40  MHz
+    Stop freq          = 200 MHz
+    No. of freq points = 641
+    RF power output    = {rf_power} dBm
+    No. of averaging   = {n_averaging}
+    Calibration kit    = '85033E Agilent'
+    """
+
     console.print()
-    console.rule("Settings for VNA calibration")
-    console.print("IF                 =100 Hz")
-    console.print("Start freq         =40 MHz")
-    console.print("Stop freq          =200 MHz")
-    console.print("No. of freq points =641")
-    console.print(f"RF power output    ={rf_power} dBm")
-    console.print(f"No. of averaging   ={n_averaging}")
-    console.print("Calibration kit    ='85033E Agilent'")
-    console.rule()
+    Panel(message, title="VNA Settings", width=min(150, console.width))
     console.print()
 
 
