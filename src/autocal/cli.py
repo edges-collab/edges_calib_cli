@@ -9,7 +9,7 @@ import signal
 import subprocess
 import sys
 import time
-import u3
+#import u3
 import yaml
 from edges_io.io import LOAD_ALIASES, CalibrationObservation
 from pathlib import Path
