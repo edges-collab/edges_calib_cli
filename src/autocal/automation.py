@@ -151,7 +151,7 @@ def measure_receiver_reading():
 
 def measure_switching_state_s11():
     """Measure SwitchingState S11."""
-    config.u3io.configIO(FIOAnalog=15)
+    #config.u3io.configIO(FIOAnalog=15)
     config.u3io.getFeedback(u3.BitDirWrite(4, 1))
     config.u3io.getFeedback(u3.BitDirWrite(5, 1))
     config.u3io.getFeedback(u3.BitDirWrite(6, 1))
