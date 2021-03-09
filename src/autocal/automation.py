@@ -139,7 +139,7 @@ def measure_receiver_reading():
         pass
 
     for i in range(1, 3):
-        for load in ["Match", "Open", "Short", "Receiver"]:
+        for load in ["Match", "Open", "Short", "ReceiverReading"]:
             if qs.confirm(
                 f"{load} load connected to VNA {load}{i:02} for ReceiverReading measurement?"
             ).ask():
