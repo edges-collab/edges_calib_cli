@@ -50,7 +50,6 @@ class Config:
         self.u3io.getFeedback(u3.BitDirWrite(5, 1))
         self.u3io.getFeedback(u3.BitDirWrite(6, 1))
         self.u3io.getFeedback(u3.BitDirWrite(7, 1))
-        logger.info("initialize U3")
 
 try:
     config = Config("~/.edges-autocal")

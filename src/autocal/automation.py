@@ -76,17 +76,17 @@ def run_load(load, run_time):
 
     while not qs.confirm(f"Connected {load} load to receiver input?").ask():
         pass
-     while not (
-        load in ["LongCableOpen"]
-        and qs.confirm("Ensured Open is connected to LongCable?").ask()
-      ):
-         pass
+        while not (
+           load in ["LongCableOpen"]
+           and qs.confirm("Ensured Open is connected to LongCable?").ask()
+           ):
+            pass
 
-     while not (
-        load in ["LongCableShort"]
-        and qs.confirm("Ensured Short is connected to LongCable?").ask()
-      ):
-        pass
+        while not (
+           load in ["LongCableShort"]
+           and qs.confirm("Ensured Short is connected to LongCable?").ask()
+           ):
+            pass
     if load in ["Ambient", "HotLoad"]:
         while not qs.confirm(
             f"Ensured high-pass filter is connected to ports of {load} Load?"
@@ -139,9 +139,9 @@ def measure_receiver_reading():
         pass
 
     for i in range(1, 3):
-        for load in ["Match", "Open", "Short", "ReceiverReading"]:
+        for load in ["Match", "Open", "Short", "Receiver"]:
             if qs.confirm(
-                f"Matched load connected to VNA {load}{i:02} measurement?"
+                f"{load} load connected to VNA {load}{i:02} for ReceiverReading measurement?"
             ).ask():
                 receiver_s11(f"{load}{i:02}.s1p")
 
