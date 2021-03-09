@@ -76,7 +76,17 @@ def run_load(load, run_time):
 
     while not qs.confirm(f"Connected {load} load to receiver input?").ask():
         pass
+     while not (
+        load in ["LongCableOpen"]
+        and qs.confirm("Ensured Open is connected to LongCable?").ask()
+      ):
+         pass
 
+     while not (
+        load in ["LongCableShort"]
+        and qs.confirm("Ensured Short is connected to LongCable?").ask()
+      ):
+        pass
     if load in ["Ambient", "HotLoad"]:
         while not qs.confirm(
             f"Ensured high-pass filter is connected to ports of {load} Load?"
@@ -88,19 +98,6 @@ def run_load(load, run_time):
             f"{'0V' if load == 'Ambient' else '12V'}?"
         ).ask():
             pass
-
-    while not (
-        load in ["LongCableOpen"]
-        and qs.confirm("Ensured Open is connected to LongCable?").ask()
-    ):
-        pass
-
-    while not (
-        load in ["LongCableShort"]
-        and qs.confirm("Ensured Short is connected to LongCable?").ask()
-    ):
-        pass
-
     while not qs.confirm("Ensured thermistor port is connected to labjack?").ask():
         pass
 
