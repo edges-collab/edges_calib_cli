@@ -370,47 +370,57 @@ def mock_temp_sensor():
 @main.command()
 def test_power_supply_box():
     """Test setting voltages on power supply box."""
-    d = u3.U3()
-    d.configIO(FIOAnalog=15)
-    d.getFeedback(u3.BitDirWrite(4, 1))
-    d.getFeedback(u3.BitDirWrite(5, 1))
-    d.getFeedback(u3.BitDirWrite(6, 1))
-    d.getFeedback(u3.BitDirWrite(7, 1))
+#    d = u3.U3()
+#    d.configIO(FIOAnalog=15)
+#    d.getFeedback(u3.BitDirWrite(4, 1))
+#    d.getFeedback(u3.BitDirWrite(5, 1))
+#    d.getFeedback(u3.BitDirWrite(6, 1))
+#    d.getFeedback(u3.BitDirWrite(7, 1))
+#
+
+
+
+
+    config.u3io.configIO(FIOAnalog=15)
+    config.u3io.getFeedback(u3.BitDirWrite(4, 1))
+    config.u3io.getFeedback(u3.BitDirWrite(5, 1))
+    config.u3io.getFeedback(u3.BitDirWrite(6, 1))
+    config.u3io.getFeedback(u3.BitDirWrite(7, 1))
 
     voltage = qs.select(
         "Select a voltage output", choices=["37V", "34V", "31.3V", "28V", "0V"]
     ).ask()
 
     if voltage == "37V":
-        d.getFeedback(u3.BitStateWrite(4, 1))
-        d.getFeedback(u3.BitStateWrite(5, 1))
-        d.getFeedback(u3.BitStateWrite(6, 1))
+        config.u3io.getFeedback(u3.BitStateWrite(4, 1))
+        config.u3io.getFeedback(u3.BitStateWrite(5, 1))
+        config.u3io.getFeedback(u3.BitStateWrite(6, 1))
         time.sleep(0.1)
-        d.getFeedback(u3.BitStateWrite(7, 0))
+        config.u3io.getFeedback(u3.BitStateWrite(7, 0))
     elif voltage == "34V":
-        d.getFeedback(u3.BitStateWrite(4, 1))
-        d.getFeedback(u3.BitStateWrite(5, 1))
-        d.getFeedback(u3.BitStateWrite(6, 0))
+        config.u3io.getFeedback(u3.BitStateWrite(4, 1))
+        config.u3io.getFeedback(u3.BitStateWrite(5, 1))
+        config.u3io.getFeedback(u3.BitStateWrite(6, 0))
         time.sleep(0.1)
-        d.getFeedback(u3.BitStateWrite(7, 0))
-    elif voltage == "31.3":
-        d.getFeedback(u3.BitStateWrite(4, 1))
-        d.getFeedback(u3.BitStateWrite(5, 0))
-        d.getFeedback(u3.BitStateWrite(6, 1))
+        config.u3io.getFeedback(u3.BitStateWrite(7, 0))
+    elif voltage == "31.3V":
+        config.u3io.getFeedback(u3.BitStateWrite(4, 1))
+        config.u3io.getFeedback(u3.BitStateWrite(5, 0))
+        config.u3io.getFeedback(u3.BitStateWrite(6, 1))
         time.sleep(0.1)
-        d.getFeedback(u3.BitStateWrite(7, 0))
+        config.u3io.getFeedback(u3.BitStateWrite(7, 0))
     elif voltage == "28V":
-        d.getFeedback(u3.BitStateWrite(4, 0))
-        d.getFeedback(u3.BitStateWrite(5, 1))
-        d.getFeedback(u3.BitStateWrite(6, 1))
+        config.u3io.getFeedback(u3.BitStateWrite(4, 0))
+        config.u3io.getFeedback(u3.BitStateWrite(5, 1))
+        config.u3io.getFeedback(u3.BitStateWrite(6, 1))
         time.sleep(0.1)
-        d.getFeedback(u3.BitStateWrite(7, 0))
+        config.u3io.getFeedback(u3.BitStateWrite(7, 0))
     elif voltage == "0V":
-        d.getFeedback(u3.BitStateWrite(4, 1))
-        d.getFeedback(u3.BitStateWrite(5, 1))
-        d.getFeedback(u3.BitStateWrite(6, 1))
+        config.u3io.getFeedback(u3.BitStateWrite(4, 1))
+        config.u3io.getFeedback(u3.BitStateWrite(5, 1))
+        config.u3io.getFeedback(u3.BitStateWrite(6, 1))
         time.sleep(0.1)
-        d.getFeedback(u3.BitStateWrite(7, 1))
+        config.u3io.getFeedback(u3.BitStateWrite(7, 1))
 
 
 @main.command()
