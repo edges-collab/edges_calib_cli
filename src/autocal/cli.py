@@ -23,7 +23,7 @@ from .automation import power_handler, vna_calib, vna_calib_receiver_reading
 from .config import config
 from .temp_sensor_with_time_U6 import temp_sensor as tmpsense
 from .utils import float_validator, int_validator
-
+#add a comment testing
 logging.basicConfig(
     level="INFO",
     format="%(message)s",
@@ -216,9 +216,9 @@ def create_directory_structure(
     res_path = obs_path / "Resistance"
     s11_path = obs_path / "S11" / f"{load}{run_num:02}"
     def_file = obs_path / "definition.yaml"
-    if not def_file.exists():
-        def_file.touch()
-    write_purpose(def_file)
+#    if not def_file.exists():
+#        def_file.touch()
+#    write_purpose(def_file)
 
     # remove all residue *.acq and *.csv files from previous run
     for item in config.spec_dir.glob("*.acq"):
@@ -235,6 +235,10 @@ def create_directory_structure(
         spec_path.mkdir(parents=True)
     if not res_path.exists():
         res_path.mkdir(parents=True)
+    if not def_file.exists():
+        def_file.touch()
+    write_purpose(def_file)
+
     return def_file, res_path, s11_path, spec_path
 
 

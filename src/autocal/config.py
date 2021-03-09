@@ -51,7 +51,6 @@ class Config:
         self.u3io.getFeedback(u3.BitDirWrite(6, 1))
         self.u3io.getFeedback(u3.BitDirWrite(7, 1))
 
-
 try:
     config = Config("~/.edges-autocal")
 except IOError:
