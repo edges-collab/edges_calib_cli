@@ -130,23 +130,24 @@ def run_load(load, run_time):
 def measure_receiver_reading():
     """Measure receiver reading S11."""
     console.rule("Performing Receiver Reading Measurement")
-    if qs.confirm(
+    while not qs.confirm(
         "Ensured fastspec is running in a different terminal for a minimum of 4 hours to "
         "stabilize the receiver?"
     ).ask():
         pass
 
-    if qs.confirm(
+    while not qs.confirm(
         "Ensure the VNA is connected with M-M SMA and calibrated with `autocal cal-vna -r`?"
     ).ask():
         pass
 
     for i in range(1, 3):
         for load in ["Match", "Open", "Short", "ReceiverReading"]:
-            if qs.confirm(
+            while not qs.confirm(
                 f"Matched load connected to VNA {load}{i:02} measurement?"
             ).ask():
-                receiver_s11(f"{load}{i:02}.s1p")
+                pass
+            receiver_s11(f"{load}{i:02}.s1p")
 
 
 def measure_switching_state_s11():
@@ -168,8 +169,9 @@ def measure_switching_state_s11():
             "Open": 31.3,
             "Short": 28,
         }.items():
-            if qs.confirm(f"{load} connected to receiver input?").ask():
-                take_s11(f"{load}{repeat:02}", voltage)
+            while not qs.confirm(f"{load} connected to receiver input?").ask():
+                pass
+            take_s11(f"{load}{repeat:02}", voltage)
 
 
 def _binblock_raw(data_in):
@@ -417,11 +419,13 @@ def vna_calib():
     console.print("  9. Select Load and wait for 10 average")
     console.print("  10. Select Done")
 
-    if qs.confirm("Confirm that all these steps were taken?").ask():
-        console.print(
-            "[green] :heavy_check_mark: VNA Calibration is completed for all loads except "
-            "ReceiverReading "
-        )
+    while not qs.confirm("Confirm that all these steps were taken?").ask():
+        pass
+
+    console.print(
+        "[green] :heavy_check_mark: VNA Calibration is completed for all loads except "
+        "ReceiverReading "
+    )
     s.close()
 
 
@@ -479,10 +483,10 @@ def vna_calib_receiver_reading():
     console.print("Step9: Select Load and wait for 10 average")
     console.print("Step10: Select Done")
 
-    if qs.confirm("Confirm all steps taken?").ask():
-        console.print(
-            "[green]:checkmark: VNA Calibration is completed for ReceiverReading"
-        )
+    while not qs.confirm("Confirm all steps taken?").ask():
+        pass
+
+    console.print("[green]:checkmark: VNA Calibration is completed for ReceiverReading")
 
     s.close()
 
