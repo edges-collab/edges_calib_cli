@@ -144,7 +144,7 @@ def measure_receiver_reading():
     for i in range(1, 3):
         for load in ["Match", "Open", "Short", "ReceiverReading"]:
             while not qs.confirm(
-                f"Matched load connected to VNA {load}{i:02} measurement?"
+                f"{load} load connected to VNA {load}{i:02} measurement?"
             ).ask():
                 pass
             receiver_s11(f"{load}{i:02}.s1p")
@@ -476,11 +476,11 @@ def vna_calib_receiver_reading():
     console.print("Step2: Again select Calibrate")
     console.print("Step3: Select 1-Port Cal, Use female calibration kit")
     console.print("Step4: Connect open to VNA port-1")
-    console.print("Step5: Select open and wait for 10 average")
+    console.print("Step5: Select open and wait for 30 average")
     console.print("Step6: Connect Short to VNA port-1")
-    console.print("Step7: Select Short and wait for 10 average")
+    console.print("Step7: Select Short and wait for 30 average")
     console.print("Step8: Connect Load to VNA port-1")
-    console.print("Step9: Select Load and wait for 10 average")
+    console.print("Step9: Select Load and wait for 30 average")
     console.print("Step10: Select Done")
 
     while not qs.confirm("Confirm all steps taken?").ask():
