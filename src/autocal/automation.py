@@ -296,7 +296,7 @@ def measure_s11(fname=None, print_settings=True):
     s11[:, 1] = data_m_re[:, 1]
     s11[:, 2] = data_p_re[:, 1]
     fname = fname or "S11.csv"
-    np.savetxt(fname, s11, delimiter=",")
+    np.savetxt(fname, s11, delimiter="\t", header="Hz S RI R 50")
     s.close()
 
 
