@@ -252,8 +252,11 @@ def measure_s11(fname=None, print_settings=True):
 
     s.send(b"INIT:CONT OFF;*OPC?\n")
     time.sleep(5)
+    
+    
+    # -----------------------------------------------------------
 
-    # Read Phase value and transfer to host controller
+    # Read Imaginary value and transfer to host controller
     # -----------------------------------------------------------
 
     # Define data type and chanel for Data transfer reference
@@ -274,9 +277,12 @@ def measure_s11(fname=None, print_settings=True):
     length = len(data_p[5:])
     data_p_array = np.array(data_p[5:])
     data_p_re = data_p_array.reshape(length // 3, 3)
-
-    # Read Magnitude value and transfer to host controller
+    # Read Imaginary value and transfer to host controller
     # -----------------------------------------------------------
+    
+    # ----------------------------------------------------------
+    # Read Real value and transfer to host controller
+    
     s.send(b"CALC1:FORM REAL;*OPC?\n")
     s.send(b'MMEM:STOR:FDAT "D:\\Auto\\EDGES_m.csv";*OPC?\n')
     s.send(b'MMEM:TRAN? "D:\\Auto\\EDGES_m.csv";*OPC?\n')
@@ -288,13 +294,16 @@ def measure_s11(fname=None, print_settings=True):
     length = len(data_m[5:])
     data_m_array = np.array(data_m[5:])
     data_m_re = data_m_array.reshape(length // 3, 3)
-
+    # Read Real value and transfer to host controller
+    # -----------------------------------------------------------
+    
+    
     # Reshape Magnitude, phase and save as S11.csv in host controller
     # -----------------------------------------------------------
     s11 = np.empty([np.size(data_m_re, 0), 3])
-    s11[:, 0] = data_m_re[:, 0]
-    s11[:, 1] = data_m_re[:, 1]
-    s11[:, 2] = data_p_re[:, 1]
+    s11[:, 0] = data_m_re[:, 0] # Frequency points
+    s11[:, 1] = data_m_re[:, 1] # real part
+    s11[:, 2] = data_p_re[:, 1] # imaginary part
     fname = fname or "S11.csv"
     np.savetxt(fname, s11, delimiter="\t", header="Hz S RI R 50")
     s.close()
