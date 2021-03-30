@@ -166,8 +166,8 @@ def measure_switching_state_s11():
             "ExternalOpen": 37,
             "ExternalShort": 37,
             "Match": 34,
-            "Open": 31.3,
-            "Short": 28,
+            "Open": 28,
+            "Short": 31.3,
         }.items():
             while not qs.confirm(f"{load} connected to receiver input?").ask():
                 pass
