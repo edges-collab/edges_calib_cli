@@ -147,7 +147,19 @@ def measure_receiver_reading():
                 f"{load} load connected to VNA {load}{i:02} measurement?"
             ).ask():
                 pass
+            voltage = 0
+            settings = _get_voltage_settings(voltage)
+
+            config.u3io.getFeedback(u3.BitStateWrite(4, settings[0]))
+            config.u3io.getFeedback(u3.BitStateWrite(5, settings[1]))
+            config.u3io.getFeedback(u3.BitStateWrite(6, settings[2]))
+            time.sleep(0.1)
+            config.u3io.getFeedback(u3.BitStateWrite(7, settings[3]))
+
+            logger.info(f"Taking receiverreading measurement at switch {voltage}V...")
             receiver_s11(f"{load}{i:02}.s1p")
+            config.u3io.getFeedback(u3.BitStateWrite(7, 1))
+            
 
 
 def measure_switching_state_s11():
