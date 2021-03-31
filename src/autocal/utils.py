@@ -2,6 +2,8 @@
 import functools
 import logging
 import numpy as np
+import questionary as qs
+import sys
 from questionary import ValidationError, Validator
 
 logger = logging.getLogger(__name__)
@@ -64,3 +66,10 @@ def float_validator(minval=-np.inf, maxval=np.inf):
                 )
 
     return FV
+
+
+def block_on_question(question):
+    """Block on affirmation from user, allowing exit."""
+    while not qs.confirm(question, default=False).ask():
+        if qs.confirm("Would you like to exit then?", default=False).ask():
+            sys.exit()

@@ -5,12 +5,14 @@ import questionary as qs
 import re
 import socket
 import subprocess
+import sys
 import time
 import u3
 from rich.console import Console
 from rich.panel import Panel
 
 from .config import config
+from .utils import block_on_question
 
 console = Console()
 logger = logging.getLogger(__name__)
@@ -78,35 +80,24 @@ def run_load(load, run_time):
 
     console.rule(f"Starting {load} Calibration")
 
-    while not qs.confirm(f"Connected {load} load to receiver input?").ask():
-        pass
+    block_on_question(f"Connected {load} load to receiver input?")
 
     if load in ["Ambient", "HotLoad"]:
-        while not qs.confirm(
+        block_on_question(
             f"Ensured high-pass filter is connected to ports of {load} Load?"
-        ).ask():
-            pass
+        )
 
-        while not qs.confirm(
+        block_on_question(
             f"Ensured voltage supply connected to Ambient Load is set to "
             f"{'0V' if load == 'Ambient' else '12V'}?"
-        ).ask():
-            pass
+        )
 
-    while not (
-        load in ["LongCableOpen"]
-        and qs.confirm("Ensured Open is connected to LongCable?").ask()
-    ):
-        pass
+    if load in ["LongCableOpen"]:
+        block_on_question("Ensured Open is connected to LongCable?")
+    if load in ["LongCableShort"]:
+        block_on_question("Ensured Short is connected to LongCable?")
 
-    while not (
-        load in ["LongCableShort"]
-        and qs.confirm("Ensured Short is connected to LongCable?").ask()
-    ):
-        pass
-
-    while not qs.confirm("Ensured thermistor port is connected to labjack?").ask():
-        pass
+    block_on_question("Ensured thermistor port is connected to labjack?")
 
     console.print(
         "[bold]Starting the spectrum observing program and temperature monitoring program"
@@ -134,23 +125,20 @@ def run_load(load, run_time):
 def measure_receiver_reading():
     """Measure receiver reading S11."""
     console.rule("Performing Receiver Reading Measurement")
-    while not qs.confirm(
+    block_on_question(
         "Ensured fastspec is running in a different terminal for a minimum of 4 hours to "
         "stabilize the receiver?"
-    ).ask():
-        pass
+    )
 
-    while not qs.confirm(
+    block_on_question(
         "Ensure the VNA is connected with M-M SMA and calibrated with `autocal cal-vna -r`?"
-    ).ask():
-        pass
+    )
 
     for repeat in [1, 2]:
         for load in ["Match", "Open", "Short", "ReceiverReading"]:
-            while not qs.confirm(
+            block_on_question(
                 f"{load} load connected to VNA {load}{repeat:02} measurement?"
-            ).ask():
-                pass
+            )
 
             if load == "ReceiverReading":
                 _set_voltage(0)
@@ -180,8 +168,7 @@ def measure_switching_state_s11():
             "Open": 28,
             "Short": 31.3,
         }.items():
-            while not qs.confirm(f"{load} connected to receiver input?").ask():
-                pass
+            block_on_question(f"{load} connected to receiver input?")
             take_s11(f"{load}{repeat:02}", voltage)
 
 
@@ -436,8 +423,7 @@ def vna_calib():
     console.print("  9. Select Load and wait for 10 average")
     console.print("  10. Select Done")
 
-    while not qs.confirm("Confirm that all these steps were taken?").ask():
-        pass
+    block_on_question("Confirm that all these steps were taken?")
 
     console.print(
         "[green] :heavy_check_mark: VNA Calibration is completed for all loads except "
@@ -500,8 +486,7 @@ def vna_calib_receiver_reading():
     console.print("Step9: Select Load and wait for 30 average")
     console.print("Step10: Select Done")
 
-    while not qs.confirm("Confirm all steps taken?").ask():
-        pass
+    block_on_question("Confirm all steps taken?")
 
     console.print("[green]:checkmark: VNA Calibration is completed for ReceiverReading")
 
