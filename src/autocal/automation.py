@@ -15,6 +15,8 @@ from .config import config
 console = Console()
 logger = logging.getLogger(__name__)
 
+STANDARD_VOLTAGES = {"External": 37, "Match": 34, "Short": 31.3, "Open": 28}
+
 
 def _get_voltage_settings(voltage):
     if voltage == 37:
@@ -31,8 +33,7 @@ def _get_voltage_settings(voltage):
         raise ValueError(f"Voltage {voltage} not understood.")
 
 
-def take_s11(fname, voltage, print_settings=True):
-    """Take S11 with particular voltage settings."""
+def _set_voltage(voltage):
     settings = _get_voltage_settings(voltage)
 
     config.u3io.getFeedback(u3.BitStateWrite(4, settings[0]))
@@ -41,18 +42,21 @@ def take_s11(fname, voltage, print_settings=True):
     time.sleep(0.1)
     config.u3io.getFeedback(u3.BitStateWrite(7, settings[3]))
 
+
+def take_s11(fname, voltage, print_settings=True):
+    """Take S11 with particular voltage settings."""
+    _set_voltage(voltage)
+
     logger.info(f"Taking {fname} measurement at {voltage}V...")
     measure_s11(f"{fname}.s1p", print_settings=print_settings)
     config.u3io.getFeedback(u3.BitStateWrite(7, 1))
     logger.info(f"... saved as '{fname}.s1p'")
 
 
-def take_all_s11(repeat_num: int):
+def take_all_load_s11(repeat_num: int):
     """Take all S11 measurements for a load."""
-    take_s11(f"External{repeat_num:02}", voltage=37)
-    take_s11(f"Match{repeat_num:02}", voltage=34, print_settings=False)
-    take_s11(f"Short{repeat_num:02}", voltage=31.3, print_settings=False)
-    take_s11(f"Open{repeat_num:02}", voltage=28, print_settings=False)
+    for i, (name, voltage) in enumerate(STANDARD_VOLTAGES.items()):
+        take_s11(f"{name}{repeat_num:02}", voltage=voltage, print_settings=not i)
 
 
 def run_load(load, run_time):
@@ -120,9 +124,9 @@ def run_load(load, run_time):
 
     console.print("")
     console.print("[bold]Taking First Repeat of S11 measurements...")
-    take_all_s11(1)
+    take_all_load_s11(1)
     console.print("[bold]Taking Second Repeat of S11 measurements...")
-    take_all_s11(2)
+    take_all_load_s11(2)
 
     epipe.terminate()
 
@@ -141,13 +145,17 @@ def measure_receiver_reading():
     ).ask():
         pass
 
-    for i in range(1, 3):
+    for repeat in [1, 2]:
         for load in ["Match", "Open", "Short", "ReceiverReading"]:
             while not qs.confirm(
-                f"{load} load connected to VNA {load}{i:02} measurement?"
+                f"{load} load connected to VNA {load}{repeat:02} measurement?"
             ).ask():
                 pass
-            receiver_s11(f"{load}{i:02}.s1p")
+
+            if load == "ReceiverReading":
+                _set_voltage(0)
+
+            receiver_s11(f"{load}{repeat:02}.s1p")
 
 
 def measure_switching_state_s11():
@@ -252,8 +260,7 @@ def measure_s11(fname=None, print_settings=True):
 
     s.send(b"INIT:CONT OFF;*OPC?\n")
     time.sleep(5)
-    
-    
+
     # -----------------------------------------------------------
 
     # Read Imaginary value and transfer to host controller
@@ -279,10 +286,10 @@ def measure_s11(fname=None, print_settings=True):
     data_p_re = data_p_array.reshape(length // 3, 3)
     # Read Imaginary value and transfer to host controller
     # -----------------------------------------------------------
-    
+
     # ----------------------------------------------------------
     # Read Real value and transfer to host controller
-    
+
     s.send(b"CALC1:FORM REAL;*OPC?\n")
     s.send(b'MMEM:STOR:FDAT "D:\\Auto\\EDGES_m.csv";*OPC?\n')
     s.send(b'MMEM:TRAN? "D:\\Auto\\EDGES_m.csv";*OPC?\n')
@@ -296,14 +303,13 @@ def measure_s11(fname=None, print_settings=True):
     data_m_re = data_m_array.reshape(length // 3, 3)
     # Read Real value and transfer to host controller
     # -----------------------------------------------------------
-    
-    
+
     # Reshape Magnitude, phase and save as S11.csv in host controller
     # -----------------------------------------------------------
     s11 = np.empty([np.size(data_m_re, 0), 3])
-    s11[:, 0] = data_m_re[:, 0] # Frequency points
-    s11[:, 1] = data_m_re[:, 1] # real part
-    s11[:, 2] = data_p_re[:, 1] # imaginary part
+    s11[:, 0] = data_m_re[:, 0]  # Frequency points
+    s11[:, 1] = data_m_re[:, 1]  # real part
+    s11[:, 2] = data_p_re[:, 1]  # imaginary part
     fname = fname or "S11.csv"
     np.savetxt(fname, s11, delimiter="\t", header="Hz S RI R 50")
     s.close()
@@ -385,7 +391,6 @@ def receiver_s11(fname):
     s11[:, 0] = data_m_re[:, 0]
     s11[:, 1] = data_m_re[:, 1]
     s11[:, 2] = data_p_re[:, 1]
-    console.print("S11=", s11)
     fname = fname or "S11.csv"
     np.savetxt(fname, s11, delimiter=",")
 

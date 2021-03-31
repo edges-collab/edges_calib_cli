@@ -23,7 +23,8 @@ from .automation import power_handler, vna_calib, vna_calib_receiver_reading
 from .config import config
 from .temp_sensor_with_time_U6 import temp_sensor as tmpsense
 from .utils import float_validator, int_validator
-#add a comment testing
+
+# add a comment testing
 logging.basicConfig(
     level="INFO",
     format="%(message)s",
@@ -126,11 +127,9 @@ def write_resistance(defn, male=True, run_num=1):
         defn["measurements"] = {}
 
     if f"{run_num:02}" not in defn["measurements"]:
-        defn["measurements"][f"{run_num:02}"] = {}
+        defn["measurements"][run_num] = {}
 
-    defn["measurements"][f"{run_num:02}"][
-        f"resistance_{'m' if male else 'f'}"
-    ] = resistance
+    defn["measurements"][run_num][f"resistance_{'m' if male else 'f'}"] = resistance
     return defn
 
 
@@ -216,9 +215,6 @@ def create_directory_structure(
     res_path = obs_path / "Resistance"
     s11_path = obs_path / "S11" / f"{load}{run_num:02}"
     def_file = obs_path / "definition.yaml"
-#    if not def_file.exists():
-#        def_file.touch()
-#    write_purpose(def_file)
 
     # remove all residue *.acq and *.csv files from previous run
     for item in config.spec_dir.glob("*.acq"):
@@ -370,17 +366,6 @@ def mock_temp_sensor():
 @main.command()
 def test_power_supply_box():
     """Test setting voltages on power supply box."""
-#    d = u3.U3()
-#    d.configIO(FIOAnalog=15)
-#    d.getFeedback(u3.BitDirWrite(4, 1))
-#    d.getFeedback(u3.BitDirWrite(5, 1))
-#    d.getFeedback(u3.BitDirWrite(6, 1))
-#    d.getFeedback(u3.BitDirWrite(7, 1))
-#
-
-
-
-
     config.u3io.configIO(FIOAnalog=15)
     config.u3io.getFeedback(u3.BitDirWrite(4, 1))
     config.u3io.getFeedback(u3.BitDirWrite(5, 1))
@@ -427,4 +412,4 @@ def test_power_supply_box():
 @click.option("-r", "--repeat-num", type=int, default=1)
 def s11(repeat_num):
     """Directly run all S11's for a particular load. Useful for quick testing."""
-    automation.take_all_s11(repeat_num)
+    automation.take_all_load_s11(repeat_num)
