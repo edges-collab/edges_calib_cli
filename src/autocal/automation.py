@@ -153,9 +153,9 @@ def measure_receiver_reading():
                 pass
 
             if load == "ReceiverReading":
-                _set_voltage(0)
-
-            receiver_s11(f"{load}{repeat:02}.s1p")
+                take_s11(f"ReceiverReading{repeat:02}", voltage=0)
+            else:
+                receiver_s11(f"{load}{repeat:02}.s1p")
 
 
 def measure_switching_state_s11():
