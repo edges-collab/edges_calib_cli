@@ -153,9 +153,12 @@ def measure_receiver_reading():
                 pass
 
             if load == "ReceiverReading":
-                take_s11(f"ReceiverReading{repeat:02}", voltage=0)
-            else:
-                receiver_s11(f"{load}{repeat:02}.s1p")
+                _set_voltage(0)
+
+            receiver_s11(f"{load}{repeat:02}.s1p")
+
+            if load == "ReceiverReading":
+                config.u3io.getFeedback(u3.BitStateWrite(7, 1))
 
 
 def measure_switching_state_s11():
