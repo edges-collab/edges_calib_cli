@@ -8,6 +8,7 @@ import subprocess
 import sys
 import time
 import u3
+from contextlib import contextmanager
 from rich.console import Console
 from rich.panel import Panel
 
@@ -61,6 +62,44 @@ def take_all_load_s11(repeat_num: int):
         take_s11(f"{name}{repeat_num:02}", voltage=voltage, print_settings=not i)
 
 
+@contextmanager
+def fastspec_process(run_time, init_time=0, post_time=0):
+    """Start a fastspec process, do some stuff while it's running, then wait for it to finish.
+
+    Examples
+    --------
+    >>> with fastspec_process(run_time=120) as fspec:
+    >>>     do_something_else()  # this will run concurrently
+    >>> do_something_after()  # this will run after fspec is done.
+    """
+    # Code to acquire resource
+    if run_time:
+        # run for a certain amount of time
+        fpipe = subprocess.Popen(
+            [config.fastspec_path, "-i", config.fastspec_ini, "-s", str(run_time), "-p"]
+        )
+    else:
+        # run forever
+        fpipe = subprocess.Popen(
+            [config.fastspec_path, "-i", config.fastspec_ini, "-p"]
+        )
+
+    if init_time:
+        time.sleep(init_time)
+
+    try:
+        yield fpipe
+    finally:
+        # Code to release resource
+        if run_time:
+            fpipe.wait()
+        else:
+            fpipe.terminate()
+
+        if post_time:
+            time.sleep(post_time)
+
+
 def run_load(load, run_time):
     """Run a full calibration of a load."""
     if load in [
@@ -103,13 +142,8 @@ def run_load(load, run_time):
         "[bold]Starting the spectrum observing program and temperature monitoring program"
     )
 
-    fpipe = subprocess.Popen(
-        [config.fastspec_path, "-i", config.fastspec_ini, "-s", str(run_time), "-p"]
-    )
-
-    epipe = subprocess.Popen(["autocal", "temp-sensor"])
-
-    fpipe.wait()
+    with fastspec_process(run_time):
+        epipe = subprocess.Popen(["autocal", "temp-sensor"])
 
     console.rule("[bold]Finished taking spectra.")
 
@@ -134,19 +168,22 @@ def measure_receiver_reading():
         "Ensure the VNA is connected with M-M SMA and calibrated with `autocal cal-vna -r`?"
     )
 
-    for repeat in [1, 2]:
-        for load in ["Match", "Open", "Short", "ReceiverReading"]:
-            block_on_question(
-                f"{load} load connected to VNA {load}{repeat:02} measurement?"
-            )
+    with fastspec_process(init_time=4 * 60 * 60, run_time=0):
+        # this runs fastspec for four hours before doing the following, then stops
+        # fastspec right after the last S11 is taken.
+        for repeat in [1, 2]:
+            for load in ["Match", "Open", "Short", "ReceiverReading"]:
+                block_on_question(
+                    f"{load} load connected to VNA {load}{repeat:02} measurement?"
+                )
 
-            if load == "ReceiverReading":
-                _set_voltage(0)
+                if load == "ReceiverReading":
+                    _set_voltage(0)
 
-            receiver_s11(f"{load}{repeat:02}.s1p")
+                receiver_s11(f"{load}{repeat:02}.s1p")
 
-            if load == "ReceiverReading":
-                config.u3io.getFeedback(u3.BitStateWrite(7, 1))
+                if load == "ReceiverReading":
+                    config.u3io.getFeedback(u3.BitStateWrite(7, 1))
 
 
 def measure_switching_state_s11():
@@ -159,17 +196,18 @@ def measure_switching_state_s11():
 
     console.rule("Starting SwitchingState measurements")
 
-    for repeat in range(1, 3):
-        for load, voltage in {
-            "ExternalMatch": 37,
-            "ExternalOpen": 37,
-            "ExternalShort": 37,
-            "Match": 34,
-            "Open": 28,
-            "Short": 31.3,
-        }.items():
-            block_on_question(f"{load} connected to receiver input?")
-            take_s11(f"{load}{repeat:02}", voltage)
+    with fastspec_process(init_time=4 * 60 * 60, run_time=0):
+        for repeat in range(1, 3):
+            for load, voltage in {
+                "ExternalMatch": 37,
+                "ExternalOpen": 37,
+                "ExternalShort": 37,
+                "Match": 34,
+                "Open": 28,
+                "Short": 31.3,
+            }.items():
+                block_on_question(f"{load} connected to receiver input?")
+                take_s11(f"{load}{repeat:02}", voltage)
 
 
 def _binblock_raw(data_in):
