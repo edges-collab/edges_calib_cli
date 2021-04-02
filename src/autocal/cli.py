@@ -195,6 +195,11 @@ def run():
 
 def cleanup(load, res_path, run_num, s11_path, spec_path):
     """Move raw files into correct locations."""
+    # Receiver reading and switching state we don't want any ACQ files saved
+    if load in ["ReceiverReading", "SwitchingState"]:
+        for fl in config.spec_dir.glob("*.acq"):
+            fl.unlink()
+
     for fl in config.spec_dir.glob("*.acq"):
         dest_path = spec_path / f"{load}_{run_num:02}_{fl.name}"
         stem = fl.stem
