@@ -168,22 +168,23 @@ def measure_receiver_reading():
         "Ensure the VNA is connected with M-M SMA and calibrated with `autocal cal-vna -r`?"
     )
 
-    with fastspec_process(init_time=4 * 60 * 60, run_time=0):
-        # this runs fastspec for four hours before doing the following, then stops
-        # fastspec right after the last S11 is taken.
-        for repeat in [1, 2]:
-            for load in ["Match", "Open", "Short", "ReceiverReading"]:
+    for repeat in [1, 2]:
+
+        with fastspec_process(init_time=4 * 60 * 60 if repeat == 1 else 0, run_time=0):
+            # this runs fastspec for four hours before doing the following, then stops
+            # fastspec right after the last S11 is taken. The second repeat does not
+            # run for four hours first.
+            for load in ["Match", "Open", "Short"]:
                 block_on_question(
                     f"{load} load connected to VNA {load}{repeat:02} measurement?"
                 )
 
-                if load == "ReceiverReading":
-                    _set_voltage(0)
-
                 receiver_s11(f"{load}{repeat:02}.s1p")
 
-                if load == "ReceiverReading":
-                    config.u3io.getFeedback(u3.BitStateWrite(7, 1))
+        # Get the receiver reading
+        _set_voltage(0)
+        receiver_s11(f"ReceiverReading{repeat:02}.s1p")
+        config.u3io.getFeedback(u3.BitStateWrite(7, 1))
 
 
 def measure_switching_state_s11():
@@ -196,18 +197,17 @@ def measure_switching_state_s11():
 
     console.rule("Starting SwitchingState measurements")
 
-    with fastspec_process(init_time=4 * 60 * 60, run_time=0):
-        for repeat in range(1, 3):
-            for load, voltage in {
-                "ExternalMatch": 37,
-                "ExternalOpen": 37,
-                "ExternalShort": 37,
-                "Match": 34,
-                "Open": 28,
-                "Short": 31.3,
-            }.items():
-                block_on_question(f"{load} connected to receiver input?")
-                take_s11(f"{load}{repeat:02}", voltage)
+    for repeat in range(1, 3):
+        for load, voltage in {
+            "ExternalMatch": 37,
+            "ExternalOpen": 37,
+            "ExternalShort": 37,
+            "Match": 34,
+            "Open": 28,
+            "Short": 31.3,
+        }.items():
+            block_on_question(f"{load} connected to receiver input?")
+            take_s11(f"{load}{repeat:02}", voltage)
 
 
 def _binblock_raw(data_in):
