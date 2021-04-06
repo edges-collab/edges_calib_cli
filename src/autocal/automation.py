@@ -182,6 +182,7 @@ def measure_receiver_reading():
                 receiver_s11(f"{load}{repeat:02}.s1p")
 
         # Get the receiver reading
+        block_on_question("ReceiverReading load connected to VNA?")
         _set_voltage(0)
         receiver_s11(f"ReceiverReading{repeat:02}.s1p")
         config.u3io.getFeedback(u3.BitStateWrite(7, 1))
