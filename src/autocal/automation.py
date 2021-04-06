@@ -207,7 +207,8 @@ def measure_switching_state_s11():
             "Open": 28,
             "Short": 31.3,
         }.items():
-            block_on_question(f"{load} connected to receiver input?")
+            if load.startswith("External"):
+                block_on_question(f"{load} connected to receiver input?")
             take_s11(f"{load}{repeat:02}", voltage)
 
 
