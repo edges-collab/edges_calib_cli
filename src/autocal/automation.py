@@ -11,15 +11,18 @@ import u3
 from contextlib import contextmanager
 from rich.console import Console
 from rich.panel import Panel
+import os
 
 from .config import config
 from .utils import block_on_question
 
+global msg
+msg=0
 console = Console()
 logger = logging.getLogger(__name__)
 
 STANDARD_VOLTAGES = {"External": 37, "Match": 34, "Short": 31.3, "Open": 28}
-
+DEVNULL = open(os.devnull, 'wb')
 
 def _get_voltage_settings(voltage):
     if voltage == 37:
@@ -65,25 +68,40 @@ def take_all_load_s11(repeat_num: int):
 @contextmanager
 def fastspec_process(run_time, init_time=0, post_time=0):
     """Start a fastspec process, do some stuff while it's running, then wait for it to finish.
-
+    
     Examples
     --------
     >>> with fastspec_process(run_time=120) as fspec:
     >>>     do_something_else()  # this will run concurrently
     >>> do_something_after()  # this will run after fspec is done.
     """
+    global msg
     # Code to acquire resource
     if run_time:
         # run for a certain amount of time
-        fpipe = subprocess.Popen(
-            [config.fastspec_path, "-i", config.fastspec_ini, "-s", str(run_time), "-p"]
-        )
+        if msg:
+            fpipe = subprocess.Popen(
+                [config.fastspec_path, "-i", config.fastspec_ini, "-s", str(run_time), "-p"], stdout=DEVNULL
+            )
+        else:
+            fpipe = subprocess.Popen(
+                [config.fastspec_path, "-i", config.fastspec_ini, "-s", str(run_time), "-p"]
+            )
+
+         
+         
     else:
         # run forever
-        fpipe = subprocess.Popen(
-            [config.fastspec_path, "-i", config.fastspec_ini, "-p"]
-        )
+        if msg:
+           fpipe = subprocess.Popen(
+               [config.fastspec_path, "-i", config.fastspec_ini, "-p"], stdout=DEVNULL
+           ) 
+        else:
+           fpipe = subprocess.Popen(
+               [config.fastspec_path, "-i", config.fastspec_ini, "-p"], stdout=DEVNULL
+           )
 
+        
     if init_time:
         time.sleep(init_time)
 
@@ -157,6 +175,8 @@ def run_load(load, run_time):
 
 
 def measure_receiver_reading():
+    global msg
+    msg = 1
     """Measure receiver reading S11."""
     console.rule("Performing Receiver Reading Measurement")
     block_on_question(
