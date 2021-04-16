@@ -359,6 +359,95 @@ def measure_s11(fname=None, print_settings=True):
 
     # Reshape Magnitude, phase and save as S11.csv in host controller
     # -----------------------------------------------------------
+    s11 = np.empty([np.size(d:qata_m_re, 0), 3])
+    s11[:, 0] = data_m_re[:, 0]  # Frequency points
+    s11[:, 1] = data_m_re[:, 1]  # real part
+    s11[:, 2] = data_p_re[:, 1]  # imaginary part
+    fname = fname or "S11.csv"
+    np.savetxt(fname, s11, delimiter="\t", header="Hz S RI R 50")
+    s.close()
+
+def SP4T_warmup_s11(fname=None, print_settings=True):
+    """Measure S11 once a load has been connected."""
+    # Create a TCP/IP socket
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    _setup(s)
+
+    # -----------------------------------------------------
+    #       set the output power level there are different level of attenuation
+    #       check document Agilent E5070B/E5071B ENA programmers guide page no 705
+    s.send(b"SOUR:POW:ATT 0;*OPC?\n")
+    s.send(b"SOUR:POW 0;*OPC?\n")
+    time.sleep(0.5)
+    # -----------------------------------------------------
+
+    s.send(b"SENS:SWE:POIN 641;*OPC?\n")
+    s.send(b"SENS:BWID 100;*OPC?\n")
+    s.send(b"SENS:AVER:STAT 1;*OPC?\n")
+    s.send(b"SENS:AVER:CLE;*OPC?\n")
+
+    s.send(b"SENS:AVER:COUN 2;*OPC?\n")
+    s.send(b"INIT:CONT ON;*OPC?\n")
+    time.sleep(10)
+    s.send(b"DISP:WIND1:TRAC1:Y:AUTO;*OPC?\n")
+
+    if print_settings:
+        _print_vna_settings(0, 10)
+
+    logger.info(f"Starting VNA Measurements for {fname}")
+
+    # FIXME: why is the above MESSAGE commented??
+    s.send(b"DISP:WIND1:TRAC1:Y:AUTO;*OPC?\n")
+    time.sleep(70)
+
+    s.send(b"INIT:CONT OFF;*OPC?\n")
+    time.sleep(5)
+
+    # -----------------------------------------------------------
+
+    # Read Imaginary value and transfer to host controller
+    # -----------------------------------------------------------
+
+    # Define data type and chanel for Data transfer reference
+    # SCPI Programer guide E5061A
+    s.send(b"CALC1:FORM IMAG;*OPC?\n")
+
+    # save data internal memory
+    s.send(b'MMEM:STOR:FDAT "D:\\Auto\\EDGES_p.csv";*OPC?\n')
+    # transfer data to host controller
+    s.send(b'MMEM:TRAN? "D:\\Auto\\EDGES_p.csv";*OPC?\n')
+    time.sleep(1)
+    data_phase = s.recv(
+        180000
+    )  # buffer size for receiving data currently set as 15Kbytes
+
+    binary_data_p = _binblock_raw(data_phase)
+    data_p = re.split("\r\n|,", binary_data_p)
+    length = len(data_p[5:])
+    data_p_array = np.array(data_p[5:])
+    data_p_re = data_p_array.reshape(length // 3, 3)
+    # Read Imaginary value and transfer to host controller
+    # -----------------------------------------------------------
+
+    # ----------------------------------------------------------
+    # Read Real value and transfer to host controller
+
+    s.send(b"CALC1:FORM REAL;*OPC?\n")
+    s.send(b'MMEM:STOR:FDAT "D:\\Auto\\EDGES_m.csv";*OPC?\n')
+    s.send(b'MMEM:TRAN? "D:\\Auto\\EDGES_m.csv";*OPC?\n')
+    time.sleep(1)
+    data_mag = s.recv(180000)
+
+    binary_data_m = _binblock_raw(data_mag)
+    data_m = re.split("\r\n|,", binary_data_m)
+    length = len(data_m[5:])
+    data_m_array = np.array(data_m[5:])
+    data_m_re = data_m_array.reshape(length // 3, 3)
+    # Read Real value and transfer to host controller
+    # -----------------------------------------------------------
+
+    # Reshape Magnitude, phase and save as S11.csv in host controller
+    # -----------------------------------------------------------
     s11 = np.empty([np.size(data_m_re, 0), 3])
     s11[:, 0] = data_m_re[:, 0]  # Frequency points
     s11[:, 1] = data_m_re[:, 1]  # real part
