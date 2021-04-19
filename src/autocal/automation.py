@@ -11,10 +11,12 @@ import sys
 import time
 import u3
 from contextlib import contextmanager
+from edges_io.io import Resistance
 from functools import partial
 from pathlib import Path
 from rich.console import Console
 from rich.panel import Panel
+from scipy.ndimage.filters import uniform_filter1d
 from typing import Optional, Union
 
 from .config import config
@@ -199,9 +201,23 @@ def _take_warmup_s11(min_warmup_iters, max_warmup_iters):
         warmup_re.append(warmup_s11[:, 1])
         warmup_im.append(warmup_s11[:, 2])
 
+        # Also check temperature of S4PT switch
+        temps = Resistance.read_csv("Temperature.csv")["sp4t_temp"]
+
         # Here we put some conditions on when we think it's
         # "converged" in its warmup
         if warmup_count >= max(1, (min_warmup_iters - 1)):  # do _at least_ 1 warmup.
+            # If we don't have 5 minutes worth of temperature readings, or the last two blocks
+            # of five temperature readings are not similar, assume we haven't yet converged.
+            if (
+                len(temps) < 10
+                or np.abs(np.mean(temps[-10:-5]) - np.mean(temps[-5:])) > 0.2
+            ):
+                continue
+
+            # The following checks if the difference in the last two measurements
+            # has an RMS that is smaller than the RMS of the alternate-channel
+            # difference in the last measurement.
             rms_diff_re = np.sqrt(
                 np.mean(
                     np.square(warmup_re[warmup_count] - warmup_re[warmup_count - 1])
@@ -228,10 +244,7 @@ def _take_warmup_s11(min_warmup_iters, max_warmup_iters):
                 )
             )
 
-            if (
-                rms_diff_re <= rms_diff_this_re / 2
-                and rms_diff_im <= rms_diff_this_im / 2
-            ):
+            if rms_diff_re <= rms_diff_this_re and rms_diff_im <= rms_diff_this_im:
                 break
 
             logger.info(
