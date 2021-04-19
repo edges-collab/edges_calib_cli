@@ -1,6 +1,8 @@
 """Automation routines for lab calibration."""
+import h5py
 import logging
 import numpy as np
+import os
 import questionary as qs
 import re
 import socket
@@ -9,20 +11,20 @@ import sys
 import time
 import u3
 from contextlib import contextmanager
+from functools import partial
+from pathlib import Path
 from rich.console import Console
 from rich.panel import Panel
-import os
+from typing import Optional
 
 from .config import config
 from .utils import block_on_question
 
-global msg
-msg=0
 console = Console()
 logger = logging.getLogger(__name__)
 
 STANDARD_VOLTAGES = {"External": 37, "Match": 34, "Short": 31.3, "Open": 28}
-DEVNULL = open(os.devnull, 'wb')
+
 
 def _get_voltage_settings(voltage):
     if voltage == 37:
@@ -54,7 +56,7 @@ def take_s11(fname, voltage, print_settings=True):
     _set_voltage(voltage)
 
     logger.info(f"Taking {fname} measurement at {voltage}V...")
-    measure_s11(f"{fname}.s1p", print_settings=print_settings)
+    measure_s11(fname=f"{fname}.s1p", print_settings=print_settings)
     config.u3io.getFeedback(u3.BitStateWrite(7, 1))
     logger.info(f"... saved as '{fname}.s1p'")
 
@@ -63,8 +65,8 @@ def take_all_load_s11(repeat_num: int):
     """Take all S11 measurements for a load."""
     """"--------------------------------
     Run S11 for 1 hour for temperature stability of SP4T switch
-    ----------------------------------- 
-     
+    -----------------------------------
+
      """
 
     for i, (name, voltage) in enumerate(STANDARD_VOLTAGES.items()):
@@ -72,42 +74,37 @@ def take_all_load_s11(repeat_num: int):
 
 
 @contextmanager
-def fastspec_process(run_time, init_time=0, post_time=0):
+def fastspec_process(run_time, init_time=0, post_time=0, stdout=None):
     """Start a fastspec process, do some stuff while it's running, then wait for it to finish.
-    
+
     Examples
     --------
     >>> with fastspec_process(run_time=120) as fspec:
     >>>     do_something_else()  # this will run concurrently
     >>> do_something_after()  # this will run after fspec is done.
     """
-    global msg
     # Code to acquire resource
     if run_time:
         # run for a certain amount of time
-        if msg:
-            fpipe = subprocess.Popen(
-                [config.fastspec_path, "-i", config.fastspec_ini, "-s", str(run_time), "-p"], stdout=DEVNULL
-            )
-        else:
-            fpipe = subprocess.Popen(
-                [config.fastspec_path, "-i", config.fastspec_ini, "-s", str(run_time), "-p"]
-            )
 
-         
-         
+        fpipe = subprocess.Popen(
+            [
+                config.fastspec_path,
+                "-i",
+                config.fastspec_ini,
+                "-s",
+                str(run_time),
+                "-p",
+            ],
+            stdout=stdout,
+        )
+
     else:
         # run forever
-        if msg:
-           fpipe = subprocess.Popen(
-               [config.fastspec_path, "-i", config.fastspec_ini, "-p"], stdout=DEVNULL
-           ) 
-        else:
-           fpipe = subprocess.Popen(
-               [config.fastspec_path, "-i", config.fastspec_ini, "-p"], stdout=DEVNULL
-           )
+        fpipe = subprocess.Popen(
+            [config.fastspec_path, "-i", config.fastspec_ini, "-p"], stdout=stdout
+        )
 
-        
     if init_time:
         time.sleep(init_time)
 
@@ -124,7 +121,13 @@ def fastspec_process(run_time, init_time=0, post_time=0):
             time.sleep(post_time)
 
 
-def run_load(load, run_time):
+def run_load(
+    load: str,
+    run_time: float,
+    min_warmup_iters=2,
+    max_warmup_iters: int = 50,
+    show_fastspec_output=True,
+):
     """Run a full calibration of a load."""
     if load in [
         "AntSim1",
@@ -166,10 +169,16 @@ def run_load(load, run_time):
         "[bold]Starting the spectrum observing program and temperature monitoring program"
     )
 
-    with fastspec_process(run_time):
+    with fastspec_process(
+        run_time, stdout=None if show_fastspec_output else subprocess.DEVNULL
+    ):
         epipe = subprocess.Popen(["autocal", "temp-sensor"])
 
     console.rule("[bold]Finished taking spectra.")
+
+    # Warmup before taking S11.
+    console.print("[bold]Starting S11 Warmup")
+    _take_warmup_s11(min_warmup_iters, max_warmup_iters)
 
     console.print("")
     console.print("[bold]Taking First Repeat of S11 measurements...")
@@ -180,9 +189,61 @@ def run_load(load, run_time):
     epipe.terminate()
 
 
-def measure_receiver_reading():
-    global msg
-    msg = 1
+def _take_warmup_s11(min_warmup_iters, max_warmup_iters):
+    warmup_count = 0
+    warmup_re = []
+    warmup_im = []
+    for warmup_count in range(max_warmup_iters):
+        warmup_s11 = SP4T_warmup_s11(print_settings=False)
+        freqs = warmup_s11[:, 0]
+        warmup_re.append(warmup_s11[:, 1])
+        warmup_im.append(warmup_s11[:, 2])
+
+        # Here we put some conditions on when we think it's
+        # "converged" in its warmup
+        if warmup_count >= max(1, (min_warmup_iters - 1)):  # do _at least_ 1 warmup.
+            rms_diff_re = np.sqrt(
+                np.mean(
+                    np.square(warmup_re[warmup_count] - warmup_re[warmup_count - 1])
+                )
+            )
+            rms_diff_this_re = np.sqrt(
+                np.mean(
+                    np.square(
+                        warmup_re[warmup_count][::2] - warmup_re[warmup_count][1::2]
+                    )
+                )
+            )
+
+            rms_diff_im = np.sqrt(
+                np.mean(
+                    np.square(warmup_im[warmup_count] - warmup_im[warmup_count - 1])
+                )
+            )
+            rms_diff_this_im = np.sqrt(
+                np.mean(
+                    np.square(
+                        warmup_im[warmup_count][::2] - warmup_im[warmup_count][1::2]
+                    )
+                )
+            )
+
+            if (
+                rms_diff_re <= rms_diff_this_re / 2
+                and rms_diff_im <= rms_diff_this_im / 2
+            ):
+                break
+
+            logger.info(
+                f"On iteration {warmup_count}, RMS_DIFF=({rms_diff_re}, {rms_diff_im}) vs. RMS_INTRINSIC=({rms_diff_this_re, rms_diff_this_im})"
+            )
+
+    with h5py.File("warmup_s11.h5", "w") as fl:
+        fl["freqs"] = freqs
+        fl["s11"] = np.array(warmup_re) + 1j * np.array(warmup_im)
+
+
+def measure_receiver_reading(show_fastspec_output=False):
     """Measure receiver reading S11."""
     console.rule("Performing Receiver Reading Measurement")
     block_on_question(
@@ -196,7 +257,11 @@ def measure_receiver_reading():
 
     for repeat in [1, 2]:
 
-        with fastspec_process(init_time=4 * 60 * 60 if repeat == 1 else 0, run_time=0):
+        with fastspec_process(
+            init_time=4 * 60 * 60 if repeat == 1 else 0,
+            run_time=0,
+            stdout=None if show_fastspec_output else subprocess.DEVNULL,
+        ):
             # this runs fastspec for four hours before doing the following, then stops
             # fastspec right after the last S11 is taken. The second repeat does not
             # run for four hours first.
@@ -204,7 +269,7 @@ def measure_receiver_reading():
                 block_on_question(
                     f"{load} load connected to VNA {load}{repeat:02} measurement?"
                 )
-                
+
                 receiver_s11(f"{load}{repeat:02}.s1p")
 
             # Block here before we release fastspec, so that it doesn't cool down
@@ -213,17 +278,20 @@ def measure_receiver_reading():
 
         # Get the receiver reading
         _set_voltage(0)
-        receiver_s11(f"ReceiverReading{repeat:02}.s1p")
+        receiver_s11(fname=f"ReceiverReading{repeat:02}.s1p")
         config.u3io.getFeedback(u3.BitStateWrite(7, 1))
 
 
-def measure_switching_state_s11():
+def measure_switching_state_s11(min_warmup_iters=2, max_warmup_iters=50):
     """Measure SwitchingState S11."""
     config.u3io.configIO(FIOAnalog=15)
     config.u3io.getFeedback(u3.BitDirWrite(4, 1))
     config.u3io.getFeedback(u3.BitDirWrite(5, 1))
     config.u3io.getFeedback(u3.BitDirWrite(6, 1))
     config.u3io.getFeedback(u3.BitDirWrite(7, 1))
+
+    console.rule("Starting Warmup")
+    _take_warmup_s11(min_warmup_iters, max_warmup_iters)
 
     console.rule("Starting SwitchingState measurements")
 
@@ -284,17 +352,26 @@ def _setup(s):
     s.send(b"SENS:FREQ:STOP 200e6;*OPC?\n")
 
 
-def measure_s11(fname=None, print_settings=True):
-    """Measure S11 once a load has been connected."""
+def measure_s11(
+    fname: Optional[str, Path] = None,
+    print_settings: bool = True,
+    count: int = 10,
+    power: float = 0.0,
+    sleep_after_display: int = 70,
+    sleep_after_init: int = 5,
+) -> np.ndarray:
+    """Measure S11 using a VNA."""
     # Create a TCP/IP socket
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     _setup(s)
 
     # -----------------------------------------------------
-    #       set the output power level there are different level of attenuation
-    #       check document Agilent E5070B/E5071B ENA programmers guide page no 705
+    # Set the output power level.
+    # There are different levels of attenuation;
+    # check document Agilent E5070B/E5071B ENA programmers
+    # guide page no 705
     s.send(b"SOUR:POW:ATT 0;*OPC?\n")
-    s.send(b"SOUR:POW 0;*OPC?\n")
+    s.send(b"SOUR:POW %f;*OPC?\n" % float(power))
     time.sleep(0.5)
     # -----------------------------------------------------
 
@@ -303,111 +380,22 @@ def measure_s11(fname=None, print_settings=True):
     s.send(b"SENS:AVER:STAT 1;*OPC?\n")
     s.send(b"SENS:AVER:CLE;*OPC?\n")
 
-    s.send(b"SENS:AVER:COUN 10;*OPC?\n")
+    s.send(b"SENS:AVER:COUN %d;*OPC?\n" % count)
     s.send(b"INIT:CONT ON;*OPC?\n")
     time.sleep(10)
     s.send(b"DISP:WIND1:TRAC1:Y:AUTO;*OPC?\n")
 
     if print_settings:
-        _print_vna_settings(0, 10)
+        _print_vna_settings(power, count)
 
-    logger.info(f"Starting VNA Measurements for {fname}")
-
-    # FIXME: why is the above MESSAGE commented??
-    s.send(b"DISP:WIND1:TRAC1:Y:AUTO;*OPC?\n")
-    time.sleep(70)
-
-    s.send(b"INIT:CONT OFF;*OPC?\n")
-    time.sleep(5)
-
-    # -----------------------------------------------------------
-
-    # Read Imaginary value and transfer to host controller
-    # -----------------------------------------------------------
-
-    # Define data type and chanel for Data transfer reference
-    # SCPI Programer guide E5061A
-    s.send(b"CALC1:FORM IMAG;*OPC?\n")
-
-    # save data internal memory
-    s.send(b'MMEM:STOR:FDAT "D:\\Auto\\EDGES_p.csv";*OPC?\n')
-    # transfer data to host controller
-    s.send(b'MMEM:TRAN? "D:\\Auto\\EDGES_p.csv";*OPC?\n')
-    time.sleep(1)
-    data_phase = s.recv(
-        180000
-    )  # buffer size for receiving data currently set as 15Kbytes
-
-    binary_data_p = _binblock_raw(data_phase)
-    data_p = re.split("\r\n|,", binary_data_p)
-    length = len(data_p[5:])
-    data_p_array = np.array(data_p[5:])
-    data_p_re = data_p_array.reshape(length // 3, 3)
-    # Read Imaginary value and transfer to host controller
-    # -----------------------------------------------------------
-
-    # ----------------------------------------------------------
-    # Read Real value and transfer to host controller
-
-    s.send(b"CALC1:FORM REAL;*OPC?\n")
-    s.send(b'MMEM:STOR:FDAT "D:\\Auto\\EDGES_m.csv";*OPC?\n')
-    s.send(b'MMEM:TRAN? "D:\\Auto\\EDGES_m.csv";*OPC?\n')
-    time.sleep(1)
-    data_mag = s.recv(180000)
-
-    binary_data_m = _binblock_raw(data_mag)
-    data_m = re.split("\r\n|,", binary_data_m)
-    length = len(data_m[5:])
-    data_m_array = np.array(data_m[5:])
-    data_m_re = data_m_array.reshape(length // 3, 3)
-    # Read Real value and transfer to host controller
-    # -----------------------------------------------------------
-
-    # Reshape Magnitude, phase and save as S11.csv in host controller
-    # -----------------------------------------------------------
-    s11 = np.empty([np.size(d:qata_m_re, 0), 3])
-    s11[:, 0] = data_m_re[:, 0]  # Frequency points
-    s11[:, 1] = data_m_re[:, 1]  # real part
-    s11[:, 2] = data_p_re[:, 1]  # imaginary part
-    fname = fname or "S11.csv"
-    np.savetxt(fname, s11, delimiter="\t", header="Hz S RI R 50")
-    s.close()
-
-def SP4T_warmup_s11(fname=None, print_settings=True):
-    """Measure S11 once a load has been connected."""
-    # Create a TCP/IP socket
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    _setup(s)
-
-    # -----------------------------------------------------
-    #       set the output power level there are different level of attenuation
-    #       check document Agilent E5070B/E5071B ENA programmers guide page no 705
-    s.send(b"SOUR:POW:ATT 0;*OPC?\n")
-    s.send(b"SOUR:POW 0;*OPC?\n")
-    time.sleep(0.5)
-    # -----------------------------------------------------
-
-    s.send(b"SENS:SWE:POIN 641;*OPC?\n")
-    s.send(b"SENS:BWID 100;*OPC?\n")
-    s.send(b"SENS:AVER:STAT 1;*OPC?\n")
-    s.send(b"SENS:AVER:CLE;*OPC?\n")
-
-    s.send(b"SENS:AVER:COUN 2;*OPC?\n")
-    s.send(b"INIT:CONT ON;*OPC?\n")
-    time.sleep(10)
-    s.send(b"DISP:WIND1:TRAC1:Y:AUTO;*OPC?\n")
-
-    if print_settings:
-        _print_vna_settings(0, 10)
-
-    logger.info(f"Starting VNA Measurements for {fname}")
+    logger.info("Starting VNA Measurements")
 
     # FIXME: why is the above MESSAGE commented??
     s.send(b"DISP:WIND1:TRAC1:Y:AUTO;*OPC?\n")
-    time.sleep(70)
+    time.sleep(sleep_after_display)
 
     s.send(b"INIT:CONT OFF;*OPC?\n")
-    time.sleep(5)
+    time.sleep(sleep_after_init)
 
     # -----------------------------------------------------------
 
@@ -458,91 +446,20 @@ def SP4T_warmup_s11(fname=None, print_settings=True):
     s11[:, 0] = data_m_re[:, 0]  # Frequency points
     s11[:, 1] = data_m_re[:, 1]  # real part
     s11[:, 2] = data_p_re[:, 1]  # imaginary part
-    fname = fname or "S11.csv"
+    if fname:
+        _save_s11(s11, fname)
+    s.close()
+    return s11
+
+
+def _save_s11(s11: np.ndarray, fname: [str, Path] = "S11.csv"):
     np.savetxt(fname, s11, delimiter="\t", header="Hz S RI R 50")
-    s.close()
 
 
-def receiver_s11(fname):
-    """Measure Receiver S11."""
-    # Create a TCP/IP socket
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    _setup(s)
-
-    # -----------------------------------------------------
-    #       set the output power level there are different level of attenuation
-    #       check document Agilent E5070B/E5071B ENA programmers guide page no 705
-    s.send(b"SOUR:POW:ATT 30;*OPC?\n")
-    s.send(b"SOUR:POW -35.00;*OPC?\n")
-    time.sleep(0.5)
-    # -----------------------------------------------------
-
-    s.send(b"SENS:SWE:POIN 641;*OPC?\n")
-    s.send(b"SENS:BWID 100;*OPC?\n")
-    s.send(b"SENS:AVER:STAT 1;*OPC?\n")
-    s.send(b"SENS:AVER:CLE;*OPC?\n")
-
-    s.send(b"SENS:AVER:COUN 30;*OPC?\n")
-    s.send(b"INIT:CONT ON;*OPC?\n")
-    time.sleep(10)
-    s.send(b"DISP:WIND1:TRAC1:Y:AUTO;*OPC?\n")
-
-    _print_vna_settings(-35, 30)
-
-    console.rule("Starting Measurements")
-    # FIXME: what message?
-    s.send(b"DISP:WIND1:TRAC1:Y:AUTO;*OPC?\n")
-    time.sleep(230)
-    s.send(b"INIT:CONT OFF;*OPC?\n")
-
-    # ___________________________________________________________
-    # Read Phase value and transfer to host controller
-    # -----------------------------------------------------------
-    # Define data type and chanel for Data transfer
-    # reference SCPI Programer guide E5061A
-    s.send(b"CALC1:FORM IMAG;*OPC?\n")
-
-    # save data internal memory
-    s.send(b'MMEM:STOR:FDAT "D:\\Auto\\EDGES_p.csv";*OPC?\n')
-    # transfer data to host controller
-    s.send(b'MMEM:TRAN? "D:\\Auto\\EDGES_p.csv";*OPC?\n')
-    time.sleep(1)
-    data_phase = s.recv(
-        180000
-    )  # buffer size for receiving data currently set as 15Kbytes
-
-    binary_data_p = _binblock_raw(data_phase)
-    data_p = re.split("\r\n|,", binary_data_p)
-    length = len(data_p[5:])
-    data_p_array = np.array(data_p[5:])
-    data_p_re = data_p_array.reshape(length // 3, 3)
-
-    # ___________________________________________________________
-    # Read Magnitude value and transfer to host controller
-    # -----------------------------------------------------------
-    s.send(b"CALC1:FORM REAL;*OPC?\n")
-    s.send(b'MMEM:STOR:FDAT "D:\\Auto\\EDGES_m.csv";*OPC?\n')
-    s.send(b'MMEM:TRAN? "D:\\Auto\\EDGES_m.csv";*OPC?\n')
-    time.sleep(1)
-    data_mag = s.recv(180000)
-
-    binary_data_m = _binblock_raw(data_mag)
-    data_m = re.split("\r\n|,", binary_data_m)
-    length = len(data_m[5:])
-    data_m_array = np.array(data_m[5:])
-    data_m_re = data_m_array.reshape(length // 3, 3)
-
-    # ___________________________________________________________
-    # Reshape Magnitude, phase and save as S11.csv in host controller
-    # -----------------------------------------------------------
-    s11 = np.empty([np.size(data_m_re, 0), 3])
-    s11[:, 0] = data_m_re[:, 0]
-    s11[:, 1] = data_m_re[:, 1]
-    s11[:, 2] = data_p_re[:, 1]
-    fname = fname or "S11.csv"
-    np.savetxt(fname, s11, delimiter=",")
-
-    s.close()
+SP4T_warmup_s11 = partial(measure_s11, count=2)
+receiver_s11 = partial(
+    measure_s11, count=30, power=-35.00, sleep_after_display=230, sleep_after_init=0
+)
 
 
 def vna_calib():
