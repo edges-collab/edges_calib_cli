@@ -353,7 +353,7 @@ def _setup(s):
 
 
 def measure_s11(
-    fname: Optional[str, Path] = None,
+    fname: Optional[Union[str, Path]] = None,
     print_settings: bool = True,
     count: int = 10,
     power: float = 0.0,
