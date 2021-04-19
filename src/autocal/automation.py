@@ -15,7 +15,7 @@ from functools import partial
 from pathlib import Path
 from rich.console import Console
 from rich.panel import Panel
-from typing import Optional
+from typing import Optional, Union
 
 from .config import config
 from .utils import block_on_question
@@ -452,7 +452,7 @@ def measure_s11(
     return s11
 
 
-def _save_s11(s11: np.ndarray, fname: [str, Path] = "S11.csv"):
+def _save_s11(s11: np.ndarray, fname: Union[str, Path] = "S11.csv"):
     np.savetxt(fname, s11, delimiter="\t", header="Hz S RI R 50")
 
 
