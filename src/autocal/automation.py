@@ -61,6 +61,12 @@ def take_s11(fname, voltage, print_settings=True):
 
 def take_all_load_s11(repeat_num: int):
     """Take all S11 measurements for a load."""
+    """"--------------------------------
+    Run S11 for 1 hour for temperature stability of SP4T switch
+    ----------------------------------- 
+     
+     """
+
     for i, (name, voltage) in enumerate(STANDARD_VOLTAGES.items()):
         take_s11(f"{name}{repeat_num:02}", voltage=voltage, print_settings=not i)
 
@@ -198,7 +204,7 @@ def measure_receiver_reading():
                 block_on_question(
                     f"{load} load connected to VNA {load}{repeat:02} measurement?"
                 )
-
+                
                 receiver_s11(f"{load}{repeat:02}.s1p")
 
             # Block here before we release fastspec, so that it doesn't cool down
