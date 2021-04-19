@@ -19,6 +19,7 @@ from rich.panel import Panel
 from scipy.ndimage.filters import uniform_filter1d
 from typing import Optional, Union
 
+from . import plotting
 from .config import config
 from .utils import block_on_question
 
@@ -203,6 +204,16 @@ def _take_warmup_s11(min_warmup_iters, max_warmup_iters):
 
         # Also check temperature of S4PT switch
         temps = Resistance.read_csv("Temperature.csv")["sp4t_temp"]
+
+        # Make a plot of the warmup progress so far.
+        # TODO: make it show to the user.
+        plotting.s11_warmup_plot(
+            freq=freqs,
+            s11_re=warmup_re,
+            s11_im=warmup_im,
+            temperatures=temps,
+            filename="warmup_s11.pdf",
+        )
 
         # Here we put some conditions on when we think it's
         # "converged" in its warmup
