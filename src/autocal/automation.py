@@ -204,6 +204,7 @@ def _take_warmup_s11(min_warmup_iters, max_warmup_iters):
 
         # Also check temperature of S4PT switch
         temps = Resistance.read_csv("Temperature.csv")[0]["sp4t_temp"]
+        os.system("tail Temperature.csv")
 
         # Make a plot of the warmup progress so far.
         # TODO: make it show to the user.
@@ -237,7 +238,7 @@ def _take_warmup_s11(min_warmup_iters, max_warmup_iters):
             rms_diff_this_re = np.sqrt(
                 np.mean(
                     np.square(
-                        warmup_re[warmup_count][::2] - warmup_re[warmup_count][1::2]
+                        warmup_re[warmup_count][1:] - warmup_re[warmup_count][:-1]
                     )
                 )
             )
@@ -250,7 +251,7 @@ def _take_warmup_s11(min_warmup_iters, max_warmup_iters):
             rms_diff_this_im = np.sqrt(
                 np.mean(
                     np.square(
-                        warmup_im[warmup_count][::2] - warmup_im[warmup_count][1::2]
+                        warmup_im[warmup_count][1:] - warmup_im[warmup_count][:-1]
                     )
                 )
             )
