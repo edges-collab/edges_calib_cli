@@ -177,6 +177,10 @@ def run_load(
     ):
         epipe = subprocess.Popen(["autocal", "temp-sensor"])
 
+        # make a plot every 2min?
+        time.sleep(120)
+        plotting.spectrum_plot_golden(load, config["spec_dir"])
+
     console.rule("[bold]Finished taking spectra.")
 
     # Warmup before taking S11.
