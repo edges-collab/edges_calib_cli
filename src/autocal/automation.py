@@ -203,7 +203,7 @@ def _take_warmup_s11(min_warmup_iters, max_warmup_iters):
         warmup_im.append(warmup_s11[:, 2])
 
         # Also check temperature of S4PT switch
-        temps = Resistance.read_csv("Temperature.csv")["sp4t_temp"]
+        temps = Resistance.read_csv("Temperature.csv")[0]["sp4t_temp"]
 
         # Make a plot of the warmup progress so far.
         # TODO: make it show to the user.
