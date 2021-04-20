@@ -199,7 +199,7 @@ def run(min_warmup_iters, max_warmup_iters, show_fastspec):
             time,
             min_warmup_iters=min_warmup_iters,
             max_warmup_iters=max_warmup_iters,
-            show_fastspec=show_fastspec,
+            show_fastspec_output=show_fastspec,
         )
 
     elif load == "SwitchingState":
@@ -207,7 +207,7 @@ def run(min_warmup_iters, max_warmup_iters, show_fastspec):
         write_resistance(def_file, male=True, run_num=run_num)
 
     elif load == "ReceiverReading":
-        automation.measure_receiver_reading(show_fastspec=show_fastspec)
+        automation.measure_receiver_reading(show_fastspec_output=show_fastspec)
         write_resistance(def_file, male=False, run_num=run_num)
 
     # ------------------------------------------------------
