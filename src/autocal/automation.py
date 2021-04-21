@@ -197,24 +197,41 @@ def _take_warmup_s11(min_warmup_iters, max_warmup_iters):
     warmup_re = []
     warmup_im = []
     for warmup_count in range(max_warmup_iters):
-        warmup_s11 = SP4T_warmup_s11(print_settings=False)
-        freqs = warmup_s11[:, 0]
-        warmup_re.append(warmup_s11[:, 1])
-        warmup_im.append(warmup_s11[:, 2])
 
-        # Also check temperature of S4PT switch
-        temps = Resistance.read_csv("Temperature.csv")[0]["sp4t_temp"]
-        os.system("tail Temperature.csv")
+        _set_voltage(0)# reseting SP4T switch
 
-        # Make a plot of the warmup progress so far.
-        # TODO: make it show to the user.
-        plotting.s11_warmup_plot(
-            freq=freqs,
-            s11_re=warmup_re,
-            s11_im=warmup_im,
-            temperatures=temps,
-            filename="warmup_s11.pdf",
-        )
+        for load, voltage in {
+           
+            "External": 37,
+            "Match": 34,
+            "Open": 28,
+            "Short": 31.3,
+        }.items():
+
+            _set_voltage(voltage)
+                 
+            warmup_s11 = SP4T_warmup_s11(print_settings=False)
+            freqs = warmup_s11[:, 0]
+            warmup_re.append(warmup_s11[:, 1])
+            warmup_im.append(warmup_s11[:, 2]) 
+            _set_voltage(0)#reseting SP4T switch
+             
+             
+
+
+            # Also check temperature of S4PT switch
+            temps = Resistance.read_csv("Temperature.csv")[0]["sp4t_temp"]
+            os.system("tail Temperature.csv")
+
+            # Make a plot of the warmup progress so far.
+            # TODO: make it show to the user.
+            plotting.s11_warmup_plot(
+               freq=freqs,
+               s11_re=warmup_re,
+               s11_im=warmup_im,
+               temperatures=temps,
+               filename="warmup_s11.pdf",
+            ) 
 
         # Here we put some conditions on when we think it's
         # "converged" in its warmup
