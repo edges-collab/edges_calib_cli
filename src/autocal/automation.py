@@ -194,14 +194,14 @@ def run_load(
 
 def _take_warmup_s11(min_warmup_iters, max_warmup_iters):
     warmup_count = 0
-    warmup_re = []
-    warmup_im = []
+    warmup_re = {"External": [], "Match": [], "Open": [], "Short": []}
+    warmup_im = {"External": [], "Match": [], "Open": [], "Short": []}
+
     for warmup_count in range(max_warmup_iters):
 
-        _set_voltage(0)# reseting SP4T switch
+        _set_voltage(0)  # reseting SP4T switch
 
         for load, voltage in {
-           
             "External": 37,
             "Match": 34,
             "Open": 28,
@@ -209,29 +209,25 @@ def _take_warmup_s11(min_warmup_iters, max_warmup_iters):
         }.items():
 
             _set_voltage(voltage)
-                 
+
             warmup_s11 = SP4T_warmup_s11(print_settings=False)
             freqs = warmup_s11[:, 0]
-            warmup_re.append(warmup_s11[:, 1])
-            warmup_im.append(warmup_s11[:, 2]) 
-            _set_voltage(0)#reseting SP4T switch
-             
-             
-
+            warmup_re[load].append(warmup_s11[:, 1])
+            warmup_im[load].append(warmup_s11[:, 2])
+            _set_voltage(0)  # reseting SP4T switch
 
             # Also check temperature of S4PT switch
             temps = Resistance.read_csv("Temperature.csv")[0]["sp4t_temp"]
-            os.system("tail Temperature.csv")
 
             # Make a plot of the warmup progress so far.
             # TODO: make it show to the user.
             plotting.s11_warmup_plot(
-               freq=freqs,
-               s11_re=warmup_re,
-               s11_im=warmup_im,
-               temperatures=temps,
-               filename="warmup_s11.pdf",
-            ) 
+                freq=freqs,
+                s11_re=warmup_re,
+                s11_im=warmup_im,
+                temperatures=temps,
+                filename="warmup_s11.pdf",
+            )
 
         # Here we put some conditions on when we think it's
         # "converged" in its warmup
@@ -247,30 +243,18 @@ def _take_warmup_s11(min_warmup_iters, max_warmup_iters):
             # The following checks if the difference in the last two measurements
             # has an RMS that is smaller than the RMS of the alternate-channel
             # difference in the last measurement.
-            rms_diff_re = np.sqrt(
-                np.mean(
-                    np.square(warmup_re[warmup_count] - warmup_re[warmup_count - 1])
-                )
+            rms_diff_re = rms(
+                warmup_re[load][warmup_count] - warmup_re[load][warmup_count - 1]
             )
-            rms_diff_this_re = np.sqrt(
-                np.mean(
-                    np.square(
-                        warmup_re[warmup_count][1:] - warmup_re[warmup_count][:-1]
-                    )
-                )
+            rms_diff_this_re = rms(
+                warmup_re[load][warmup_count][1:] - warmup_re[load][warmup_count][:-1]
             )
 
-            rms_diff_im = np.sqrt(
-                np.mean(
-                    np.square(warmup_im[warmup_count] - warmup_im[warmup_count - 1])
-                )
+            rms_diff_im = rms(
+                warmup_im[load][warmup_count] - warmup_im[load][warmup_count - 1]
             )
-            rms_diff_this_im = np.sqrt(
-                np.mean(
-                    np.square(
-                        warmup_im[warmup_count][1:] - warmup_im[warmup_count][:-1]
-                    )
-                )
+            rms_diff_this_im = rms(
+                warmup_im[load][warmup_count][1:] - warmup_im[load][warmup_count][:-1]
             )
 
             if rms_diff_re <= rms_diff_this_re and rms_diff_im <= rms_diff_this_im:
@@ -283,6 +267,11 @@ def _take_warmup_s11(min_warmup_iters, max_warmup_iters):
     with h5py.File("warmup_s11.h5", "w") as fl:
         fl["freqs"] = freqs
         fl["s11"] = np.array(warmup_re) + 1j * np.array(warmup_im)
+
+
+def rms(x: np.ndarray):
+    """Take RMS of x."""
+    return np.sqrt(np.mean(np.square(x)))
 
 
 def measure_receiver_reading(show_fastspec_output=False):
