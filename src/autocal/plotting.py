@@ -19,9 +19,6 @@ def s11_warmup_plot(
     freq1 = freq[nfreq // 2]
     freq2 = freq[-1]
 
-    s11_re = np.array(s11_re)
-    s11_im = np.array(s11_im)
-
     fig, ax = plt.subplots(5, 1, sharex=True, figsize=(12, 12))
 
     for i, load in enumerate(s11_re.keys()):
