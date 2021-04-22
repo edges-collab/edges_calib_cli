@@ -22,8 +22,8 @@ def s11_warmup_plot(
     fig, ax = plt.subplots(5, 1, sharex=True, figsize=(12, 12))
 
     for i, load in enumerate(s11_re.keys()):
-        re = np.array(s11_re[load])
-        im = np.array(s11_im[load])
+        re = np.atleast_2d(np.array(s11_re[load]))
+        im = np.atleast_2d(np.array(s11_im[load]))
 
         ax[0].plot(re[:, 0], ls="-", color=f"C{i}", label=f"{load} (Re)")
         ax[0].plot(im[:, 0], ls="--", color=f"C{i}", label=f"{load} (Im)")
