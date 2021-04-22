@@ -22,24 +22,23 @@ def s11_warmup_plot(
     fig, ax = plt.subplots(5, 1, sharex=True, figsize=(12, 12))
 
     for i, load in enumerate(s11_re.keys()):
-        ax[0].plot(s11_re[load][:, 0], ls="-", color=f"C{i}", label=f"{load} (Re)")
-        ax[0].plot(s11_im[load][:, 0], ls="--", color=f"C{i}", label=f"{load} (Im)")
+        re = np.array(s11_re[load])
+        im = np.array(s11_im[load])
+
+        ax[0].plot(re[:, 0], ls="-", color=f"C{i}", label=f"{load} (Re)")
+        ax[0].plot(im[:, 0], ls="--", color=f"C{i}", label=f"{load} (Im)")
         ax[0].set_title(f"{freq0:.2f} MHz")
 
-        ax[1].plot(s11_re[load][:, nfreq // 2])
-        ax[1].plot(s11_im[load][:, nfreq // 2])
+        ax[1].plot(re[:, nfreq // 2])
+        ax[1].plot(im[:, nfreq // 2])
         ax[1].set_title(f"{freq1:.2f} MHz")
 
-        ax[2].plot(s11_re[load][:, -1])
-        ax[2].plot(s11_im[load][:, -1])
+        ax[2].plot(re[:, -1])
+        ax[2].plot(im[:, -1])
         ax[2].set_title(f"{freq2:.2f} MHz")
 
-        ax[3].plot(
-            np.sqrt(np.mean(np.square(s11_re[load][1:] - s11_re[load][:-1]), axis=1))
-        )
-        ax[3].plot(
-            np.sqrt(np.mean(np.square(s11_im[load][1:] - s11_im[load][:-1]), axis=1))
-        )
+        ax[3].plot(np.sqrt(np.mean(np.square(re[1:] - re[:-1]), axis=1)))
+        ax[3].plot(np.sqrt(np.mean(np.square(im[1:] - im[:-1]), axis=1)))
         ax[3].set_title("RMS of difference between measurements")
 
     ax[4].plot(temperatures)
