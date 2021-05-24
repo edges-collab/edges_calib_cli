@@ -154,7 +154,13 @@ def write_resistance(defn, male=True, run_num=1):
     default=True,
     help="Whether to show fastspec output",
 )
-def run(min_warmup_iters, max_warmup_iters, show_fastspec):
+@click.option(
+    "-p/-P",
+    "--plot/--no-plot",
+    default=True,
+    help="Whether to create running plots of various parts of the calibration.",
+)
+def run(min_warmup_iters, max_warmup_iters, show_fastspec, plot):
     """Run a calibration of a load."""
     console.rule("Running automated calibration")
 
@@ -200,10 +206,11 @@ def run(min_warmup_iters, max_warmup_iters, show_fastspec):
             min_warmup_iters=min_warmup_iters,
             max_warmup_iters=max_warmup_iters,
             show_fastspec_output=show_fastspec,
+            plot=plot,
         )
 
     elif load == "SwitchingState":
-        automation.measure_switching_state_s11()
+        automation.measure_switching_state_s11(plot=plot)
         write_resistance(def_file, male=True, run_num=run_num)
 
     elif load == "ReceiverReading":

@@ -130,6 +130,7 @@ def run_load(
     min_warmup_iters=2,
     max_warmup_iters: int = 50,
     show_fastspec_output=True,
+    plot=True,
 ):
     """Run a full calibration of a load."""
     if load in [
@@ -181,7 +182,7 @@ def run_load(
 
     # Warmup before taking S11.
     console.print("[bold]Starting S11 Warmup")
-    _take_warmup_s11(min_warmup_iters, max_warmup_iters)
+    _take_warmup_s11(min_warmup_iters, max_warmup_iters, plot=plot)
 
     console.print("")
     console.print("[bold]Taking First Repeat of S11 measurements...")
@@ -192,7 +193,7 @@ def run_load(
     epipe.terminate()
 
 
-def _take_warmup_s11(min_warmup_iters, max_warmup_iters):
+def _take_warmup_s11(min_warmup_iters, max_warmup_iters, plot=True):
     warmup_count = 0
     warmup_re = {"External": [], "Match": [], "Open": [], "Short": []}
     warmup_im = {"External": [], "Match": [], "Open": [], "Short": []}
@@ -221,13 +222,14 @@ def _take_warmup_s11(min_warmup_iters, max_warmup_iters):
 
             # Make a plot of the warmup progress so far.
             # TODO: make it show to the user.
-            plotting.s11_warmup_plot(
-                freq=freqs,
-                s11_re=warmup_re,
-                s11_im=warmup_im,
-                temperatures=temps,
-                filename="warmup_s11.pdf",
-            )
+            if plot:
+                plotting.s11_warmup_plot(
+                    freq=freqs,
+                    s11_re=warmup_re,
+                    s11_im=warmup_im,
+                    temperatures=temps,
+                    filename="warmup_s11.pdf",
+                )
 
         # Here we put some conditions on when we think it's
         # "converged" in its warmup
@@ -313,7 +315,7 @@ def measure_receiver_reading(show_fastspec_output=False):
         config.u3io.getFeedback(u3.BitStateWrite(7, 1))
 
 
-def measure_switching_state_s11(min_warmup_iters=2, max_warmup_iters=50):
+def measure_switching_state_s11(min_warmup_iters=2, max_warmup_iters=50, plot=True):
     """Measure SwitchingState S11."""
     config.u3io.configIO(FIOAnalog=15)
     config.u3io.getFeedback(u3.BitDirWrite(4, 1))
@@ -322,7 +324,7 @@ def measure_switching_state_s11(min_warmup_iters=2, max_warmup_iters=50):
     config.u3io.getFeedback(u3.BitDirWrite(7, 1))
 
     console.rule("Starting Warmup")
-    _take_warmup_s11(min_warmup_iters, max_warmup_iters)
+    _take_warmup_s11(min_warmup_iters, max_warmup_iters, plot=plot)
 
     console.rule("Starting SwitchingState measurements")
 
