@@ -5,7 +5,14 @@ import datetime
 import logging
 import math
 import time
-import u6
+import warnings
+
+try:
+    import u6
+except ImportError:
+    warnings.warn(
+        "Could not import u6 -- will not be able to run most of the functions!"
+    )
 
 logger = logging.getLogger(__name__)
 
@@ -46,13 +53,13 @@ def temp_sensor(filename="Temperature.csv"):
             lna_voltage = connection.getAIN(3)
             sp4t_voltage = connection.getAIN(0)
             load_voltage = connection.getAIN(1)
-            Vs = connection.getAIN(2) # measure the Vs (V) of labjack
+            voltage_s = connection.getAIN(2)  # measure the Vs (V) of labjack
             # -----------------------------------------------------------------------------------
             # Calculate the resistence from voltage
             # -----------------------------------------------------------------------------------
-            lna_resistance = (lna_voltage * 9918) / (Vs - lna_voltage)
-            sp4t_resistance = (sp4t_voltage * 9960) / (Vs - sp4t_voltage)
-            load_resistance = (load_voltage * 9923) / (Vs - load_voltage)
+            lna_resistance = (lna_voltage * 9918) / (voltage_s - lna_voltage)
+            sp4t_resistance = (sp4t_voltage * 9960) / (voltage_s - sp4t_voltage)
+            load_resistance = (load_voltage * 9923) / (voltage_s - load_voltage)
 
             # -----------------------------------------------------------------------------------
             # Calculate the temperature with curve fitting
@@ -95,10 +102,6 @@ def temp_sensor(filename="Temperature.csv"):
                     - ABS_ZERO
                 )
             except ValueError:
-           #     logger.warning(
-           #         f"Failed to calculate values! LoadResistance was {load_resistance} and load "
-           #         f"voltage was {load_voltage}. Skipping Measurement."
-           #     )
                 continue
 
             time.sleep(30)

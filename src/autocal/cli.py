@@ -1,15 +1,17 @@
 """CLI functions for autocal."""
+import atexit
 import click
 import datetime as dt
 import functools
 import logging
+import numpy as np
 import questionary as qs
 import re
 import signal
 import subprocess
 import sys
 import time
-import u3
+import warnings
 import yaml
 from edges_io.io import LOAD_ALIASES, CalibrationObservation
 from pathlib import Path
@@ -19,10 +21,18 @@ from rich.panel import Panel
 from typing import Optional, Tuple
 
 from . import automation
+from ._redis_tools import array_to_redis, redis
 from .automation import power_handler, vna_calib, vna_calib_receiver_reading
 from .config import config
 from .temp_sensor_with_time_U6 import temp_sensor as tmpsense
 from .utils import float_validator, int_validator
+
+try:
+    import u3
+except ImportError:
+    warnings.warn(
+        "Could not import u3 -- will not be able to run most of the functions!"
+    )
 
 # add a comment testing
 logging.basicConfig(
@@ -444,3 +454,50 @@ def test_power_supply_box():
 def s11(repeat_num):
     """Directly run all S11's for a particular load. Useful for quick testing."""
     automation.take_all_load_s11(repeat_num)
+
+
+@main.command()
+@click.option("-p/-P", "--plot/--no-plot", default=True)
+def mock_s11_warmup(plot):
+    """Mock the S11 warmup iterations and visualization."""
+    warmup_re = np.zeros(100)
+    warmup_im = np.ones(100)
+    temps = np.array([0, 0.1, 0.2])
+
+    if plot:
+        bokeh_plot_module = Path(__file__).parent / "_bokeh_plots.py"
+        bk_pipe = subprocess.Popen(["bokeh", "serve", str(bokeh_plot_module)])
+        atexit.register(bk_pipe.terminate)
+
+    count = 0
+    for count in range(100):
+        time.sleep(0.1)
+
+        warmup_re = np.vstack((warmup_re, count * np.ones(100)))
+        warmup_im = np.vstack((warmup_im, 2 * count * np.ones(100)))
+        temps = np.concatenate((temps, [np.random.normal()]))
+
+        if plot:
+            array_to_redis(redis, warmup_re[:, 0], "re_begin")
+            array_to_redis(redis, warmup_re[:, 100 // 2], "re_mid")
+            array_to_redis(redis, warmup_re[:, -1], "re_end")
+            array_to_redis(redis, warmup_im[:, 0], "im_begin")
+            array_to_redis(redis, warmup_im[:, 100 // 2], "im_mid")
+            array_to_redis(redis, warmup_im[:, -1], "im_end")
+            array_to_redis(redis, temps, "temps")
+            array_to_redis(
+                redis,
+                np.sqrt(
+                    np.mean(np.square(warmup_re[:, 1:] - warmup_re[:, :-1]), axis=1)
+                ),
+                "re_rms",
+            )
+            array_to_redis(
+                redis,
+                np.sqrt(
+                    np.mean(np.square(warmup_im[:, 1:] - warmup_im[:, :-1]), axis=1)
+                ),
+                "im_rms",
+            )
+
+    print("Finishing up.")

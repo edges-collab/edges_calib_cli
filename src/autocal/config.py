@@ -1,10 +1,21 @@
 """Configuration options for the package."""
-import u3
+import warnings
 import yaml
-from LabJackPython import NullHandleException
 from pathlib import Path
 
 from .utils import singleton
+
+try:
+    import u3
+except ImportError:
+    warnings.warn("Could not import u3 -- will not be able to run most functions!")
+
+try:
+    from LabJackPython import NullHandleException
+except ImportError:
+    warnings.warn(
+        "Could not import LabJackPython -- will be able to use some functionality!"
+    )
 
 
 @singleton
@@ -50,6 +61,7 @@ class Config:
         self.u3io.getFeedback(u3.BitDirWrite(5, 1))
         self.u3io.getFeedback(u3.BitDirWrite(6, 1))
         self.u3io.getFeedback(u3.BitDirWrite(7, 1))
+
 
 try:
     config = Config("~/.edges-autocal")

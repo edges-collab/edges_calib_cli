@@ -9,7 +9,7 @@ import socket
 import subprocess
 import sys
 import time
-import u3
+import warnings
 from contextlib import contextmanager
 from edges_io.io import Resistance
 from functools import partial
@@ -20,8 +20,14 @@ from scipy.ndimage.filters import uniform_filter1d
 from typing import Optional, Union
 
 from . import plotting
+from ._redis_tools import array_to_redis, redis
 from .config import config
 from .utils import block_on_question
+
+try:
+    import u3
+except ImportError:
+    warnings.warn("Could not import u3 -- will not be able to run most functions!")
 
 console = Console()
 logger = logging.getLogger(__name__)
@@ -196,28 +202,45 @@ def run_load(
     epipe.terminate()
 
 
+def _save_s11_redis(re, im, temps):
+    """Save necessary S11 data to redis to be used in other processes.
+
+    In particular it is used in the bokeh plotting to get access to the data
+    as a stream.
+    """
+    array_to_redis(redis, re[:, 0], "re_begin")
+    array_to_redis(redis, re[:, 100 // 2], "re_mid")
+    array_to_redis(redis, re[:, -1], "re_end")
+    array_to_redis(redis, im[:, 0], "im_begin")
+    array_to_redis(redis, im[:, 100 // 2], "im_mid")
+    array_to_redis(redis, im[:, -1], "im_end")
+    array_to_redis(redis, temps, "temps")
+    array_to_redis(
+        redis, np.sqrt(np.mean(np.square(re[:, 1:] - re[:, :-1]), axis=1)), "re_rms"
+    )
+    array_to_redis(
+        redis, np.sqrt(np.mean(np.square(im[:, 1:] - im[:, :-1]), axis=1)), "im_rms"
+    )
+
+
 def _take_warmup_s11(min_warmup_iters, max_warmup_iters):
     warmup_count = 0
-    warmup_re = []
-    warmup_im = []
+
     for warmup_count in range(max_warmup_iters):
         warmup_s11 = SP4T_warmup_s11(print_settings=False)
         freqs = warmup_s11[:, 0]
-        warmup_re.append(warmup_s11[:, 1])
-        warmup_im.append(warmup_s11[:, 2])
+
+        if warmup_count == 0:
+            warmup_re = np.array(warmup_s11[:, 1])
+            warmup_im = np.array(warmup_s11[:, 2])
+        else:
+            warmup_re = np.vstack((warmup_re, warmup_s11[:, 1]))
+            warmup_im = np.vstack((warmup_im, warmup_s11[:, 2]))
 
         # Also check temperature of S4PT switch
         temps = Resistance.read_csv("Temperature.csv")["sp4t_temp"]
 
-        # Make a plot of the warmup progress so far.
-        # TODO: make it show to the user.
-        plotting.s11_warmup_plot(
-            freq=freqs,
-            s11_re=warmup_re,
-            s11_im=warmup_im,
-            temperatures=temps,
-            filename="warmup_s11.pdf",
-        )
+        _save_s11_redis(warmup_re, warmup_re, temps)
 
         # Here we put some conditions on when we think it's
         # "converged" in its warmup
