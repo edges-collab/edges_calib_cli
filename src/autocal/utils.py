@@ -29,7 +29,8 @@ def int_validator(minval=-np.inf, maxval=np.inf):
         def validate(self, document):
             if len(document.text) == 0:
                 raise ValidationError(
-                    message="Please enter a value", cursor_position=len(document.text),
+                    message="Please enter a value",
+                    cursor_position=len(document.text),
                 )
 
             try:
@@ -52,7 +53,8 @@ def float_validator(minval=-np.inf, maxval=np.inf):
         def validate(self, document):
             if len(document.text) == 0:
                 raise ValidationError(
-                    message="Please enter a value", cursor_position=len(document.text),
+                    message="Please enter a value",
+                    cursor_position=len(document.text),
                 )
 
             try:

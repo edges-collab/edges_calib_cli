@@ -1,2 +1,4 @@
-from subprocess import Popen;
-pipe=Popen(['autocal','temp-sensor'])
+"""A quick test script."""
+from subprocess import Popen
+
+pipe = Popen(["autocal", "temp-sensor"])
