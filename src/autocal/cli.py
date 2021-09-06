@@ -120,7 +120,8 @@ def write_resistance(defn, male=True, run_num=1):
     """Write a male/female resistance to file."""
     resistance = float(
         qs.text(
-            "Please measure the resistance (Ohms):", validate=float_validator(40, 60),
+            "Please measure the resistance (Ohms):",
+            validate=float_validator(40, 60),
         ).ask()
     )
     if "measurements" not in defn:

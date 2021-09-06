@@ -46,7 +46,7 @@ def temp_sensor(filename="Temperature.csv"):
             lna_voltage = connection.getAIN(3)
             sp4t_voltage = connection.getAIN(0)
             load_voltage = connection.getAIN(1)
-            Vs = connection.getAIN(2) # measure the Vs (V) of labjack
+            Vs = connection.getAIN(2)  # measure the Vs (V) of labjack
             # -----------------------------------------------------------------------------------
             # Calculate the resistence from voltage
             # -----------------------------------------------------------------------------------
@@ -95,10 +95,10 @@ def temp_sensor(filename="Temperature.csv"):
                     - ABS_ZERO
                 )
             except ValueError:
-           #     logger.warning(
-           #         f"Failed to calculate values! LoadResistance was {load_resistance} and load "
-           #         f"voltage was {load_voltage}. Skipping Measurement."
-           #     )
+                #     logger.warning(
+                #         f"Failed to calculate values! LoadResistance was {load_resistance} and load "
+                #         f"voltage was {load_voltage}. Skipping Measurement."
+                #     )
                 continue
 
             time.sleep(30)
