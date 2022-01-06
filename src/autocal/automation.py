@@ -368,7 +368,7 @@ def _binblock_raw(data_in):
 
 
 def _setup(s):
-    server_address = ("10.206.161.72", 5025)  # ip address of NA
+    server_address = ("10.206.160.72", 5025)  # ip address of NA
     logger.info(
         f"Connecting to network analyser {server_address[0]} port {server_address[1]}"
     )

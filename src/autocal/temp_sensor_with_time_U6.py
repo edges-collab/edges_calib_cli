@@ -114,4 +114,5 @@ def temp_sensor(filename="Temperature.csv"):
                 "Room_Temp(C)": internal_temp,
             }
             writer.writerow(row)
+            csvfile.flush()
             logger.info(row)
