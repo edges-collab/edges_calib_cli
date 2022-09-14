@@ -133,14 +133,7 @@ def run_load(
     plot=True,
 ):
     """Run a full calibration of a load."""
-    if load in [
-        "AntSim1",
-        "AntSim2",
-        "AntSim3",
-        "HotLoad",
-        "LongCableOpen",
-        "LongCableShort",
-    ]:
+    if load in {"AntSim1", "AntSim2", "AntSim3", "HotLoad", "LongCableOpen", "LongCableShort"}:
         config.u3io.configIO(FIOAnalog=15)
 
     config.u3io.getFeedback(u3.BitDirWrite(4, 1))
@@ -152,7 +145,7 @@ def run_load(
 
     block_on_question(f"Connected {load} load to receiver input?")
 
-    if load in ["Ambient", "HotLoad"]:
+    if load in {"Ambient", "HotLoad"}:
         block_on_question(
             f"Ensured high-pass filter is connected to ports of {load} Load?"
         )
@@ -162,9 +155,9 @@ def run_load(
             f"{'0V' if load == 'Ambient' else '12V'}?"
         )
 
-    if load in ["LongCableOpen"]:
+    if load in {"LongCableOpen"}:
         block_on_question("Ensured Open is connected to LongCable?")
-    if load in ["LongCableShort"]:
+    if load in {"LongCableShort"}:
         block_on_question("Ensured Short is connected to LongCable?")
 
     block_on_question("Ensured thermistor port is connected to labjack?")
@@ -404,7 +397,7 @@ def measure_s11(
     # check document Agilent E5070B/E5071B ENA programmers
     # guide page no 705
     s.send(b"SOUR:POW:ATT 0;*OPC?\n")
-    s.send(b"SOUR:POW %f;*OPC?\n" % float(power))
+    s.send(b"SOUR:POW %f;*OPC?\n" % power)
     time.sleep(0.5)
     # -----------------------------------------------------
 

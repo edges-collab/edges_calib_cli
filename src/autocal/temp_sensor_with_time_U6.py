@@ -116,3 +116,8 @@ def temp_sensor(filename="Temperature.csv"):
             writer.writerow(row)
             csvfile.flush()
             logger.info(row)
+
+            # Some warnings if things seem bad.
+            if not 23.0 < internal_temp < 25.0:
+                logger.warning("Room Temperature is not between 23C and 25C!")
+            
