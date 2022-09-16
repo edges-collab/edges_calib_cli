@@ -261,7 +261,8 @@ def _take_warmup_s11(min_warmup_iters, max_warmup_iters, plot=True):
 
     with h5py.File("warmup_s11.h5", "w") as fl:
         fl["freqs"] = freqs
-        fl["s11"] = np.array(warmup_re) + 1j * np.array(warmup_im)
+        for load in warmup_re:
+            fl[load] = np.array(warmup_re[load]) + 1j * np.array(warmup_im[load])
 
 
 def rms(x: np.ndarray):
