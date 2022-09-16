@@ -235,15 +235,11 @@ def cleanup(load, res_path, run_num, s11_path, spec_path):
             fl.unlink()
 
     for fl in config.spec_dir.glob("*.acq"):
-        dest_path = spec_path / f"{load}_{run_num:02}_{fl.name}"
-        stem = fl.stem
-        fl.replace(dest_path)
+        fl.replace(spec_path / f"{load}_{run_num:02}_{fl.name}")
     for fl in Path(".").glob("*.csv"):
-        dest_path = res_path / f"{load}_{run_num:02}_{stem}.csv"
-        fl.replace(dest_path)
+        fl.replace(res_path / f"{load}_{run_num:02}_{fl.stem}.csv")
     for fl in Path(".").glob("*.s1p"):
-        dest_path = s11_path / fl
-        fl.replace(dest_path)
+        fl.replace(s11_path / fl)
 
 
 def create_directory_structure(
