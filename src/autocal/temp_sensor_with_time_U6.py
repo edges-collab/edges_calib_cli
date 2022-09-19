@@ -65,10 +65,10 @@ def temp_sensor(filename="Temperature.csv"):
                 1.03514e-3,
                 2.33825e-4,
                 7.92467e-8,
-                0.1408390910882e-2
-                0.22774732e-3
-                9.87803e-7
-                6.704665177e-8
+                0.1408390910882e-2,
+                0.22774732e-3,
+                9.87803e-7,
+                6.704665177e-8,
             )
 
             try:  # Hello leroy Fixes the value error causing a crash
