@@ -54,7 +54,7 @@ def temp_sensor(filename="Temperature.csv"):
             lna_resistance = (lna_voltage * 9918) / (vs - lna_voltage)
             sp4t_resistance = (sp4t_voltage * 9960) / (vs - sp4t_voltage)
             load_resistance = (load_voltage * 9923) / (vs - load_voltage)
-            ambient_resistance=((ambient_room_voltage*3251)/(Vs-ambient_room_voltage))
+            ambient_resistance=((ambient_room_voltage*3251)/(vs-ambient_room_voltage))
             # -----------------------------------------------------------------------------------
             # Calculate the temperature with curve fitting
             # -----------------------------------------------------------------------------------
