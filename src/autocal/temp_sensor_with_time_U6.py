@@ -46,7 +46,7 @@ def temp_sensor(filename="Temperature.csv"):
             lna_voltage = connection.getAIN(3)
             sp4t_voltage = connection.getAIN(0)
             load_voltage = connection.getAIN(1)
-            ambient_room_voltage=d.getAIN(8)#ambient room temperature sensor
+            ambient_room_voltage=connection.getAIN(8)#ambient room temperature sensor
             vs = connection.getAIN(2)  # measure the Vs (V) of labjack
             # -----------------------------------------------------------------------------------
             # Calculate the resistence from voltage
