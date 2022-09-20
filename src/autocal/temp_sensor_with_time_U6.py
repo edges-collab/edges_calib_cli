@@ -102,10 +102,10 @@ def temp_sensor(filename="Temperature.csv"):
                 ambient_room_deg_cels = (
                     1
                     / (
-                        f[7]
-                        + f[8] * math.log(ambient_resistance)
-                        + f[9] * math.pow(math.log(ambient_resistance), 2)
-                        + f[10] * math.pow(math.log(ambient_resistance), 3)
+                        f[6]
+                        + f[7] * math.log(ambient_resistance)
+                        + f[8] * math.pow(math.log(ambient_resistance), 2)
+                        + f[9] * math.pow(math.log(ambient_resistance), 3)
                     )
                     - ABS_ZERO
                 )
