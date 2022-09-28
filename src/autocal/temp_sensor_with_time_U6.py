@@ -12,9 +12,13 @@ logger = logging.getLogger(__name__)
 ABS_ZERO = 273.15
 
 
-def temp_sensor(filename="Temperature.csv"):
+def temp_sensor(filename=None):
     """Measure thermistor temperature."""
     connection = u6.U6()
+
+    if filename is None:
+        now = datetime.datetime.now()
+        filename = f"{now.strftime('%Y_%j_%H_%M_%S')}_lab.csv"
 
     with open(filename, "w") as csvfile:
         fieldnames = [
