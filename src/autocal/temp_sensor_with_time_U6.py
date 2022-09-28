@@ -44,10 +44,15 @@ def temp_sensor(filename="Temperature.csv"):
             # Read Labjack Voltage
             # -----------------------------------------------------------------------------------
             lna_voltage = connection.getAIN(3)
+            time.sleep(.5)
             sp4t_voltage = connection.getAIN(0)
+            time.sleep(.5)
             load_voltage = connection.getAIN(1)
+            time.sleep(.5)
             ambient_room_voltage=connection.getAIN(8)#ambient room temperature sensor
+            time.sleep(.5)
             vs = connection.getAIN(2)  # measure the Vs (V) of labjack
+            time.sleep(.5)
             # -----------------------------------------------------------------------------------
             # Calculate the resistence from voltage
             # -----------------------------------------------------------------------------------
