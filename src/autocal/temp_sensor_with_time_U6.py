@@ -38,7 +38,7 @@ def temp_sensor(filename="Temperature.csv"):
             now = datetime.datetime.now()
             date = now.strftime("%m/%d/%Y")
             times = now.strftime("%H:%M:%S")
-            internal_temp = connection.getTemperature() - ABS_ZERO
+            #internal_temp = connection.getTemperature() - ABS_ZERO
 
             # -----------------------------------------------------------------------------------
             # Read Labjack Voltage
