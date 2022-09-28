@@ -359,9 +359,7 @@ def get_observation() -> Tuple[CalibrationObservation, dt.datetime, Path, int]:
                 logger.error(f"Please remove the existing folder: {folder.name}")
                 sys.exit()
 
-            calobs = CalibrationObservation(
-                folder, include_previous=False, compile_from_def=False
-            )
+            calobs = CalibrationObservation(folder)
 
             obs_path = calobs.path
     return calobs, now, obs_path, time
