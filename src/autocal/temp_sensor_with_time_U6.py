@@ -38,7 +38,7 @@ def temp_sensor(filename="Temperature.csv"):
             now = datetime.datetime.now()
             date = now.strftime("%m/%d/%Y")
             times = now.strftime("%H:%M:%S")
-            internal_temp = connection.getTemperature() - ABS_ZERO
+            # TODO: should we be using internal temperature? (i.e. connection.getTemperature)?
 
             # -----------------------------------------------------------------------------------
             # Read Labjack Voltage
@@ -46,7 +46,9 @@ def temp_sensor(filename="Temperature.csv"):
             lna_voltage = connection.getAIN(3)
             sp4t_voltage = connection.getAIN(0)
             load_voltage = connection.getAIN(1)
-            ambient_room_voltage=connection.getAIN(8)#ambient room temperature sensor
+            ambient_room_voltage = connection.getAIN(
+                8
+            )  # ambient room temperature sensor
             vs = connection.getAIN(2)  # measure the Vs (V) of labjack
             # -----------------------------------------------------------------------------------
             # Calculate the resistence from voltage
@@ -54,7 +56,9 @@ def temp_sensor(filename="Temperature.csv"):
             lna_resistance = (lna_voltage * 9918) / (vs - lna_voltage)
             sp4t_resistance = (sp4t_voltage * 9960) / (vs - sp4t_voltage)
             load_resistance = (load_voltage * 9923) / (vs - load_voltage)
-            ambient_resistance=((ambient_room_voltage*3251)/(vs-ambient_room_voltage))
+            ambient_resistance = (ambient_room_voltage * 3251) / (
+                vs - ambient_room_voltage
+            )
             # -----------------------------------------------------------------------------------
             # Calculate the temperature with curve fitting
             # -----------------------------------------------------------------------------------
@@ -136,4 +140,3 @@ def temp_sensor(filename="Temperature.csv"):
             # Some warnings if things seem bad.
             if not 23.0 < ambient_room_deg_cels < 25.0:
                 logger.warning("Room Temperature is not between 23C and 25C!")
-            

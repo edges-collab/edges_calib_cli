@@ -26,9 +26,9 @@ def s11_warmup_plot(
         im = np.atleast_2d(np.array(s11_im[load]))
         print(re.shape)
         print(im.shape)
-        if re.shape[1]==0 or im.shape[1]==0:
-           continue
-        
+        if re.shape[1] == 0 or im.shape[1] == 0:
+            continue
+
         ax[0].plot(re[:, 0], ls="-", color=f"C{i}", label=f"{load} (Re)")
         ax[0].plot(im[:, 0], ls="--", color=f"C{i}", label=f"{load} (Im)")
         ax[0].set_title(f"{freq0:.2f} MHz")

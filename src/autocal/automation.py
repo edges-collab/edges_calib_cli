@@ -133,7 +133,14 @@ def run_load(
     plot=True,
 ):
     """Run a full calibration of a load."""
-    if load in {"AntSim1", "AntSim2", "AntSim3", "HotLoad", "LongCableOpen", "LongCableShort"}:
+    if load in {
+        "AntSim1",
+        "AntSim2",
+        "AntSim3",
+        "HotLoad",
+        "LongCableOpen",
+        "LongCableShort",
+    }:
         config.u3io.configIO(FIOAnalog=15)
 
     config.u3io.getFeedback(u3.BitDirWrite(4, 1))

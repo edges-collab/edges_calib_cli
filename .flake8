@@ -19,5 +19,6 @@ rst-roles =
   attr
 exclude =
     devel/*
+    setup.py
 per-file-ignores =
     tests/*:D
