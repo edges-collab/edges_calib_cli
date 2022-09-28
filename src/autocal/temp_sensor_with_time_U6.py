@@ -118,7 +118,7 @@ def temp_sensor(filename="Temperature.csv"):
             except ValueError:
                 continue
 
-            time.sleep(30)
+            time.sleep(1)
 
             row = {
                 "Date": date,
