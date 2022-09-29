@@ -126,7 +126,7 @@ def temp_sensor(filename=None):
             except ValueError:
                 continue
 
-            time.sleep(1)
+            time.sleep(28)
 
             row = {
                 "Date": date,
