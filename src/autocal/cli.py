@@ -353,12 +353,13 @@ def get_observation() -> Tuple[CalibrationObservation, dt.datetime, Path, int]:
 
             keep_going = qs.confirm(
                 "Previous calibration directory exists for these specs within the last 2"
-                " weeks. Add these measurements to those? "
+                f" weeks [{folder.name}]. Add these measurements to those? "
             ).ask()
             if not keep_going:
                 logger.error(f"Please remove the existing folder: {folder.name}")
                 sys.exit()
-
+            else:
+                console.print(f"OK. Using '{folder}' to write out the calibration.")
             calobs = CalibrationObservation(folder)
 
             obs_path = calobs.path
