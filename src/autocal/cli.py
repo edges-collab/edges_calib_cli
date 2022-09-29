@@ -11,7 +11,8 @@ import sys
 import time
 import u3
 import yaml
-from edges_io.io import LOAD_ALIASES, CalibrationObservation
+from datetime import datetime
+from edges_io.io import LOAD_ALIASES, CalibrationObservation, Resistance
 from pathlib import Path
 from rich.console import Console
 from rich.logging import RichHandler
@@ -237,7 +238,12 @@ def cleanup(load, res_path, run_num, s11_path, spec_path):
     for fl in config.spec_dir.glob("*.acq"):
         fl.replace(spec_path / f"{load}_{run_num:02}_{fl.name}")
     for fl in Path(".").glob("*.csv"):
-        fl.replace(res_path / f"{load}_{run_num:02}_{fl.stem}.csv")
+        r = Resistance.read_csv(fl)[0]
+        t = datetime.strptime(r["Date"][0] + "-" + r["Time"][0], "%m/%d/%Y-%H:%M:%S")
+
+        fl.replace(
+            res_path / f"{load}_{run_num:02}_{t.strftime('%Y_%j_%H_%M_%S')}_lab.csv"
+        )
     for fl in Path(".").glob("*.s1p"):
         fl.replace(s11_path / fl)
 
