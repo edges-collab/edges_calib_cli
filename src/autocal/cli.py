@@ -361,7 +361,7 @@ def get_observation() -> Tuple[CalibrationObservation, dt.datetime, Path, int]:
                 "Previous calibration directory exists for these specs within the last 2"
                 f" weeks [{folder.name}]. Add these measurements to those? "
             ).ask()
-            if not use_previous and obs_path == calobs.path:
+            if not use_previous and obs_path.absolute() == folder.absolute():
                 logger.error(f"Please remove the existing folder: {folder.name}")
                 sys.exit()
             elif use_previous:
