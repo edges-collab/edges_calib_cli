@@ -357,18 +357,18 @@ def get_observation() -> Tuple[CalibrationObservation, dt.datetime, Path, int]:
             and (rec == int(match["rcv_num"]))
         ):
 
-            keep_going = qs.confirm(
+            use_previous = qs.confirm(
                 "Previous calibration directory exists for these specs within the last 2"
                 f" weeks [{folder.name}]. Add these measurements to those? "
             ).ask()
-            if not keep_going:
+            if not use_previous and obs_path == calobs.path:
                 logger.error(f"Please remove the existing folder: {folder.name}")
                 sys.exit()
-            else:
+            elif use_previous:
                 console.print(f"OK. Using '{folder}' to write out the calibration.")
-            calobs = CalibrationObservation(folder)
+                calobs = CalibrationObservation(folder)
+                obs_path = calobs.path
 
-            obs_path = calobs.path
     return calobs, now, obs_path, time
 
 
