@@ -239,7 +239,7 @@ def cleanup(load, res_path, run_num, s11_path, spec_path):
         fl.replace(spec_path / f"{load}_{run_num:02}_{fl.name}")
     for fl in Path(".").glob("*.csv"):
         r = Resistance.read_csv(fl)[0]
-        t = datetime.strptime(r["Date"][0] + "-" + r["Time"][0], "%m/%d/%Y-%H:%M:%S")
+        t = datetime.strptime(r["date"][0] + "-" + r["time"][0], "%m/%d/%Y-%H:%M:%S")
 
         fl.replace(
             res_path / f"{load}_{run_num:02}_{t.strftime('%Y_%j_%H_%M_%S')}_lab.csv"
