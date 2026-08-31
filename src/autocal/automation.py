@@ -1,4 +1,5 @@
 """Automation routines for lab calibration."""
+
 import h5py
 import logging
 import numpy as np
