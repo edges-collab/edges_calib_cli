@@ -1,4 +1,5 @@
 """Simple utilities for use elsewhere in the package."""
+
 import functools
 import logging
 import numpy as np
