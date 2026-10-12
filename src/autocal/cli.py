@@ -1,4 +1,5 @@
 """CLI functions for autocal."""
+
 import click
 import datetime as dt
 import functools
