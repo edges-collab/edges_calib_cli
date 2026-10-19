@@ -1,4 +1,5 @@
 """Configuration options for the package."""
+
 import u3
 import yaml
 from LabJackPython import NullHandleException
