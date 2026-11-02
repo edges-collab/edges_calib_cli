@@ -1,4 +1,5 @@
 """Package for automatic lab-based calibration for EDGES 2."""
+
 import sys
 
 if sys.version_info[:2] >= (3, 8):
